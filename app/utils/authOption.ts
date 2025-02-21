@@ -1,5 +1,5 @@
 import { authService } from "@/service/auth-service";
-import { AuthOptions } from "next-auth";
+import { AuthOptions, Session } from "next-auth";
 import { JWT} from "next-auth/jwt";
 import CredentialsProvider from "next-auth/providers/credentials";
 
@@ -54,6 +54,7 @@ declare module "next-auth" {
    * a prop on the `SessionProvider` React Context
    */
   interface Session {
+    user: User;
     accessToken?: string;
   }
 }

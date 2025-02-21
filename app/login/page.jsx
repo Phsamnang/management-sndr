@@ -26,7 +26,7 @@ export default function Login() {
   })  
 
    const { data: session } = useSession();
-   if (session) redirect("/home");
+   if (session) redirect("/");
 
   const onSubmit = async (data) => {
    try {
@@ -42,8 +42,6 @@ export default function Login() {
     console.log(error)
    }
   }
-
-
   return (
       <>
         <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
