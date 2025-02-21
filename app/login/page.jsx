@@ -26,7 +26,7 @@ export default function Login() {
   })  
 
    const { data: session } = useSession();
-   if (session) redirect("/");
+   if (session) redirect("/home");
 
   const onSubmit = async (data) => {
    try {

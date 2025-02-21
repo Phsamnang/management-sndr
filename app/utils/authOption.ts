@@ -1,5 +1,6 @@
 import { authService } from "@/service/auth-service";
 import { AuthOptions } from "next-auth";
+import { JWT} from "next-auth/jwt";
 import CredentialsProvider from "next-auth/providers/credentials";
 
 export const authOptions: AuthOptions = {
@@ -29,6 +30,20 @@ export const authOptions: AuthOptions = {
     signIn: "/login",
   },
   callbacks: {
+      async jwt({ token, user }: { token: JWT, user: any }) {
+      // Attach the token to the JWT if the user object is available (on successful login)
+      if (user) {
+        token.user = user;
+        token.accessToken = user.token; // Store the Spring token in the JWT
+      }
+      return token;
+    },
+    async session({ session, token }: { session: Session, token: JWT }) {
+      // Pass the JWT token (including the Spring token) to the session
+      session.user = token.user;
+      session.accessToken = token.accessToken; // Expose the token in the session
+      return session;
+    },
   },
 };
 
@@ -39,29 +54,6 @@ declare module "next-auth" {
    * a prop on the `SessionProvider` React Context
    */
   interface Session {
-    refreshTokenExpires?: number;
-    accessTokenExpires?: number;
-    refreshToken?: string;
     accessToken?: string;
-    error?: string;
-    user?: User;
-    visitor_id?: string;
   }
-
-  interface User {
-    status: {
-      code: number;
-      message: string;
-    };
-    data: {
-      access_token: string;
-      token_type: string;
-      expires_in: number;
-      refresh_token: string;
-    };
-    sub: string;
-    scope: string;
-    biller_id: string;
-    visitor_id?: string;
-  }
-}   
+}
