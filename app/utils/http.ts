@@ -1,62 +1,65 @@
 import axios from "axios";
+import {getSession, signOut} from "next-auth/react";
+import {Session} from "next-auth";
 
-// Create axios instance with default config
-const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000/api",
-  headers: {
-    "Content-Type": "application/json",
-  },
+export const http = axios.create({
+  baseURL:'http://localhost:8080/api/v1',
 });
 
-// Request interceptor for adding auth token or other headers
-api.interceptors.request.use(
-  (config) => {
-    // You can add authentication headers here
-    // const token = localStorage.getItem('token');
-    // if (token) {
-    //   config.headers.Authorization = `Bearer ${token}`;
-    // }
-    return config;
-  },
-  (error) => {
-    return Promise.reject(error);
-  }
+http.interceptors.request.use(async (request) => {
+  const userSession: Session | null = await getSession();
+
+  if (!userSession) return request;
+
+  request.headers.Authorization = `Bearer ${(userSession)?.user?.accessToken}`;
+  try { request.headers['X-Timezone'] = Intl.DateTimeFormat().resolvedOptions().timeZone; }
+  catch (e) { console.log(e) }
+  return request;
+});
+
+http.interceptors.response.use(
+    (response) => {
+      return response;
+    },
+    (error) => {
+      const response = error?.response
+      if (!response) {
+        return Promise.reject(error);
+      } else if (response.status === 401) {
+        return signOut({
+          callbackUrl: `/login`,
+          redirect: true
+        });
+      } else {
+        const data = response?.data
+        const error = (data && data?.message) || response.statusText || data?.status?.message;
+
+        return Promise.reject({
+          message: error,
+          data: data.data,
+          status: response.status
+        });
+      }
+    },
 );
 
-// Response interceptor for handling errors
-api.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    // Handle errors here (e.g., unauthorized, server errors)
-    return Promise.reject(error);
+
+declare module "next-auth" {
+  /**
+   * Returned by `useSession`, `getSession` and received as
+   * a prop on the `SessionProvider` React Context
+   */
+  interface Session {
+    refreshTokenExpires?: number;
+    accessTokenExpires?: number;
+    refreshToken?: string;
+    accessToken?: string;
+    error?: string;
+    user?: User;
+    visitor_id?: string;
   }
-);
 
-// Example API methods
-export const apiService = {
-  // GET request
-  get: async <T>(url: string, params?: any) => {
-    const response = await api.get<T>(url, { params });
-    return response.data;
-  },
-
-  // POST request
-  post: async <T>(url: string, data: any) => {
-    const response = await api.post<T>(url, data);
-    return response.data;
-  },
-
-  // PUT request
-  put: async <T>(url: string, data: any) => {
-    const response = await api.put<T>(url, data);
-    return response.data;
-  },
-
-  // DELETE request
-  delete: async <T>(url: string) => {
-    const response = await api.delete<T>(url);
-    return response.data;
-  },
-};
-
-export default api;
+  interface User {
+      accessToken: string;
+  }
+}
