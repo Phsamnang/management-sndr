@@ -1,6 +1,6 @@
 "use client"
 
-import { Calendar, Home, Inbox, LogOutIcon, Search, Settings } from "lucide-react";
+import { Calendar, Home, Inbox, LogOutIcon, Search } from "lucide-react";
 
 import {
   Sidebar,
@@ -18,12 +18,12 @@ import { signOut } from "next-auth/react";
 const items = [
   {
     title: "Home",
-    url: "/home",
+    url: "/dasboard/home",
     icon: Home,
   },
   {
     title: "Inbox",
-    url: "#",
+    url: "/dasboard/employee",
     icon: Inbox,
   },
   {
