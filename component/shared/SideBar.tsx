@@ -1,4 +1,4 @@
-"use client"
+"use client";
 
 import { Calendar, Home, Inbox, LogOutIcon, Search } from "lucide-react";
 
@@ -12,18 +12,18 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
-import { signOut } from "next-auth/react";    
+import { signOut } from "next-auth/react";
 
 // Menu items.
 const items = [
   {
     title: "Home",
-    url: "/dasboard/home",
+    url: "/dashboard",
     icon: Home,
   },
   {
-    title: "Inbox",
-    url: "/dasboard/employee",
+    title: "Employee",
+    url: "/dashboard/employee",
     icon: Inbox,
   },
   {

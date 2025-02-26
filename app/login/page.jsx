@@ -26,17 +26,17 @@ export default function Login() {
   })  
 
    const { data: session } = useSession();
-    if (session) redirect("/home");
+      if (session) redirect("/dashboard");
 
   const onSubmit = async (data) => {
    try {
      const result = await signIn("credentials", {
-                username: data.username,
-                password: data.password,
-                // identification: JSON.stringify(identification),
-                callbackUrl: "/home",
-                redirect: false,
-            })
+       username: data.username,
+       password: data.password,
+       // identification: JSON.stringify(identification),
+       callbackUrl: "/dashboard",
+       redirect: false,
+     });
     console.log(result)
    } catch (error) {
     console.log(error)

@@ -5,7 +5,7 @@ export default withAuth(
   function middleware(req) {
     // If the user is authenticated and tries to access /login, redirect to home
     if (req.nextUrl.pathname.startsWith("/login") && req.nextauth.token) {
-      return NextResponse.redirect(new URL("/home", req.url));
+      return NextResponse.redirect(new URL("dashboard/home", req.url));
     }
     return NextResponse.next();
   },
