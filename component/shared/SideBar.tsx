@@ -27,8 +27,8 @@ const items = [
     icon: Inbox,
   },
   {
-    title: "Calendar",
-    url: "#",
+    title: "Loan",
+    url: "/dashboard/loan",
     icon: Calendar,
   },
   {
