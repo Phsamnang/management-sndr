@@ -32,8 +32,8 @@ const items = [
     icon: Calendar,
   },
   {
-    title: "Search",
-    url: "#",
+    title: "Table Management",
+    url: "/dashboard/table",
     icon: Search,
   },
   {

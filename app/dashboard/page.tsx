@@ -1,7 +1,9 @@
-import React from 'react'
+"use client"
 
-export default function page() {
-  return (
-    <div>Dashboard</div>
-  )
+import { POSInterface } from "@/components/ui/pos/pos-interface"
+
+
+
+export default function Page() {
+  return <POSInterface />
 }
