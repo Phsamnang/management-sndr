@@ -7,12 +7,13 @@ import { PlusCircle, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/menu-ui/select"
+import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/menu-ui/select"
 import { toast } from "@/components/ui/use-toast"
 import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { useQuery } from "@tanstack/react-query"
+import { useMutation, useQuery } from "@tanstack/react-query"
 import { categoryService } from "@/service/category-service"
 import { set } from "react-hook-form"
+import { menuService } from "@/service/menu-service"
 interface MenuItem {
   id: string
   name: string
@@ -50,8 +51,10 @@ export default function MenuPage() {
   const [newItem, setNewItem] = useState({
     id:'',
     name: "",
-    category: "",
+    categoryId: "",
   })
+
+  const[menuName,setMenuName]=useState<string>("")
 
 
   const [category,setCategory]=useState<category>({
@@ -63,7 +66,9 @@ export default function MenuPage() {
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
-    setNewItem((prev) => ({ ...prev, [name]: value }))
+
+    setMenuName(value )
+    
   }
 
  
@@ -71,33 +76,53 @@ export default function MenuPage() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
 
+    const req={
+      name:menuName,
+      categoryId:category.id
+    }
+
+    console.log("req",req)
+
+    mutateMenu.mutate(req);
+
     // Basic validation
-    if (!newItem.name) {
-      toast({
-        title: "Error",
-        description: "Menu name is required",
-        variant: "destructive",
-      })
-      return
-    }
+    // if (!newItem.name) {
+    //   toast({
+    //     title: "Error",
+    //     description: "Menu name is required",
+    //     variant: "destructive",
+    //   })
+    //   return
+    // }
 
-    // Add new item to the list
-    const newMenuItem: MenuItem = {
-      ...newItem,
-    }
+    // // Add new item to the list
+    // const newMenuItem: MenuItem = {
+    //   ...newItem,
+    // }
 
-    setMenuItems((prev) => [...prev, newMenuItem])
+    // setMenuItems((prev) => [...prev, newMenuItem])
 
 
-    // Close modal
-    setIsModalOpen(false)
+    // // Close modal
+    // setIsModalOpen(false)
 
-    toast({
-      title: "Success",
-      description: "Menu item added successfully",
-    })
+    // toast({
+    //   title: "Success",
+    //   description: "Menu item added successfully",
+    // })
   }
-
+  const mutateMenu=useMutation({
+    mutationFn:(data:any)=>{
+      return menuService.createMenu(data)
+    },
+    onSuccess:()=>{
+      toast({
+        title: "Success",
+        description: "Menu item added successfully",
+      })
+      setIsModalOpen(false)
+    }
+  })
   const categories=useQuery({
     queryFn:()=>categoryService.getCategory(),
     queryKey: ["categories"],
@@ -108,6 +133,7 @@ export default function MenuPage() {
       id:value,
       name:categories?.data?.filter((item:any)=>item?.id===value)[0].name
     })
+    
   }
   return (
     <div className="container mx-auto py-8">
@@ -173,7 +199,7 @@ export default function MenuPage() {
                     id="name"
                     name="name"
                     placeholder="Enter menu name"
-                    value={newItem.name}
+                    value={menuName}
                     onChange={handleInputChange}
                     className="col-span-3"
                   />
