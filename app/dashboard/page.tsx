@@ -1,9 +1,7 @@
 "use client"
 
-import { POSInterface } from "@/components/ui/pos/pos-interface"
-
-
+import TableSelection from "@/components/ui/pos/pos-interface"
 
 export default function Page() {
-  return <POSInterface />
+  return <TableSelection />
 }

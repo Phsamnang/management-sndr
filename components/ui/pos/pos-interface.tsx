@@ -1,127 +1,305 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import { POSHeader } from "./pos-header"
-import { POSMenu } from "./pos-menu"
-import { POSOrderSidebar } from "./pos-order-sidebar"
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Grid, Users, Coffee, Utensils, UmbrellaIcon } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { useQuery } from "@tanstack/react-query";
+import { tabelService } from "@/service/table-service";
+import { log } from "node:console";
 
-export interface POSMenuItem {
-  id: number
-  name: string
-  price: string
-  priceValue: number
-  image: string
-  description?: string
-  category: string
-}
+// Table type definition
+type TableStatus = "available" | "occupied" | "reserved" | "maintenance";
 
-export interface POSOrderItem extends POSMenuItem {
-  quantity: number
-}
+type Table = {
+  id: number;
+  number: number;
+  seats: number;
+  status: TableStatus;
+  category: string;
+};
 
-export interface POSCategory {
-  name: string
-  count: number
-  items: POSMenuItem[]
-}
+export default function TableSelection() {
+  const router = useRouter();
+  const [selectedTable, setSelectedTable] = useState<number | null>(null);
+  const [newCategory, setNewCategory] = useState("");
+  const [showAddCategory, setShowAddCategory] = useState(false);
 
-export function POSInterface() {
-  const [categories, setCategories] = useState<POSCategory[]>([])
-  const [activeCategory, setActiveCategory] = useState<string>("All")
-  const [orderItems, setOrderItems] = useState<POSOrderItem[]>([])
-  const [selectedTable, setSelectedTable] = useState<string | null>(null)
+  const {data,isLoading}=useQuery({
+    queryFn:()=>tabelService.getAllTable(),
+    queryKey:['tables']
+  })
 
-  // Process menu data into categories and items
-  // useEffect(() => {
-  //   const allItems: POSMenuItem[] = []
-  //   const categoryMap: Record<string, POSMenuItem[]> = {}
 
-  //   // Process all menu items
-  //   menuData.forEach((category) => {
-  //     category.items.forEach((item) => {
-  //       const priceValue = Number.parseFloat(item.price.replace("$", ""))
-  //       const menuItem: POSMenuItem = {
-  //         ...item,
-  //         priceValue,
-  //         category: category.category,
-  //       }
+  // Initial table data with dynamic categories
+  const [tableData, setTableData] = useState<Table[]>([
+    // Main Dining
+    {
+      id: 1,
+      number: 1,
+      seats: 2,
+      status: "available",
+      category: "Main Dining",
+    },
+    {
+      id: 2,
+      number: 2,
+      seats: 2,
+      status: "available",
+      category: "Main Dining",
+    },
+    {
+      id: 3,
+      number: 3,
+      seats: 4,
+      status: "available",
+      category: "Main Dining",
+    },
+    { id: 4, number: 4, seats: 4, status: "occupied", category: "Main Dining" },
+    {
+      id: 5,
+      number: 5,
+      seats: 6,
+      status: "available",
+      category: "Main Dining",
+    },
+    { id: 6, number: 6, seats: 6, status: "reserved", category: "Main Dining" },
 
-  //       allItems.push(menuItem)
+    // VIP Section
+    {
+      id: 7,
+      number: 7,
+      seats: 8,
+      status: "available",
+      category: "VIP Section",
+    },
+    {
+      id: 8,
+      number: 8,
+      seats: 8,
+      status: "available",
+      category: "VIP Section",
+    },
 
-  //       // Group by category
-  //       if (!categoryMap[category.category]) {
-  //         categoryMap[category.category] = []
-  //       }
-  //       categoryMap[category.category].push(menuItem)
-  //     })
-  //   })
+    // Bar Area
+    { id: 9, number: 9, seats: 2, status: "available", category: "Bar Area" },
+    { id: 10, number: 10, seats: 2, status: "occupied", category: "Bar Area" },
+    { id: 11, number: 11, seats: 2, status: "available", category: "Bar Area" },
+    { id: 12, number: 12, seats: 2, status: "available", category: "Bar Area" },
 
-    // Create categories array
-  //   const categoriesArray: POSCategory[] = [{ name: "All", count: allItems.length, items: allItems }]
+    // Outdoor Patio
+    {
+      id: 13,
+      number: 13,
+      seats: 4,
+      status: "available",
+      category: "Outdoor Patio",
+    },
+    {
+      id: 14,
+      number: 14,
+      seats: 4,
+      status: "available",
+      category: "Outdoor Patio",
+    },
+    {
+      id: 15,
+      number: 15,
+      seats: 4,
+      status: "reserved",
+      category: "Outdoor Patio",
+    },
 
-  //   Object.entries(categoryMap).forEach(([name, items]) => {
-  //     categoriesArray.push({
-  //       name,
-  //       count: items.length,
-  //       items,
-  //     })
-  //   })
+    // Private Room
+    {
+      id: 16,
+      number: 16,
+      seats: 10,
+      status: "available",
+      category: "Private Room",
+    },
+    {
+      id: 17,
+      number: 17,
+      seats: 12,
+      status: "maintenance",
+      category: "Private Room",
+    },
+  ]);
 
-  //   setCategories(categoriesArray)
-  // }, [])
+  if(isLoading) return <>Loading...</>
 
-  const addToOrder = (item: POSMenuItem) => {
-    setOrderItems((prev) => {
-      const existingItem = prev.find((i) => i.id === item.id)
+  // Get unique categories from table data
+  const categories = Array.from(
+    new Set(data?.map((table) => table.category))
+  );
 
-      if (existingItem) {
-        return prev.map((i) => (i.id === item.id ? { ...i, quantity: i.quantity + 1 } : i))
-      } else {
-        return [...prev, { ...item, quantity: 1 }]
-      }
-    })
-  }
+  const handleTableSelect = (tableId: number) => {
+    setSelectedTable(tableId);
+  };
 
-  const updateQuantity = (id: number, quantity: number) => {
-    if (quantity <= 0) {
-      setOrderItems((prev) => prev.filter((item) => item.id !== id))
-      return
+  const handleProceed = () => {
+    if (selectedTable) {
+      // Navigate to menu page with selected table
+      router.push(`/menu?table=${selectedTable}`);
     }
+  };
 
-    setOrderItems((prev) => prev.map((item) => (item.id === id ? { ...item, quantity } : item)))
-  }
+  const getTableStatusColor = (status: TableStatus) => {
+    switch (status) {
+      case "available":
+        return "bg-green-100 border-green-500 hover:bg-green-200";
+      case "occupied":
+        return "bg-red-100 border-red-500 text-red-700 opacity-60 cursor-not-allowed";
+      case "reserved":
+        return "bg-amber-100 border-amber-500 text-amber-700 opacity-60 cursor-not-allowed";
+      case "maintenance":
+        return "bg-gray-100 border-gray-500 text-gray-700 opacity-60 cursor-not-allowed";
+      default:
+        return "bg-gray-100";
+    }
+  };
 
-  const clearOrder = () => {
-    setOrderItems([])
-  }
+  const getCategoryIcon = (category: string) => {
+    switch (category.toLowerCase()) {
+      case "main dining":
+        return <Utensils className="h-5 w-5" />;
+      case "vip section":
+        return <Users className="h-5 w-5" />;
+      case "bar area":
+        return <Coffee className="h-5 w-5" />;
+      case "outdoor patio":
+        return <UmbrellaIcon className="h-5 w-5" />;
+      default:
+        return <Grid className="h-5 w-5" />;
+    }
+  };
 
-  const handleTableSelect = (table: string | null) => {
-    setSelectedTable(table)
-  }
+  const handleAddCategory = () => {
+    if (newCategory.trim()) {
+      // Add a new table with the new category
+      const newId = Math.max(...tableData.map((t) => t.id)) + 1;
+      const newTableNumber = Math.max(...tableData.map((t) => t.number)) + 1;
+
+      setTableData([
+        ...tableData,
+        {
+          id: newId,
+          number: newTableNumber,
+          seats: 4,
+          status: "available",
+          category: newCategory.trim(),
+        },
+      ]);
+
+      setNewCategory("");
+      setShowAddCategory(false);
+    }
+  };
 
   return (
-    <div className="flex h-screen flex-col bg-slate-50">
-      {/* <POSHeader selectedTable={selectedTable} /> */}
+    <div className="min-h-screen bg-gray-50 p-4">
+      <div className="mx-auto max-w-6xl">
+        <header className="mb-6 flex justify-between items-center">
+          <div>
+            <h1 className="text-3xl font-bold">Select a Table</h1>
+            <p className="text-muted-foreground">
+              Choose a table to place an order
+            </p>
+          </div>
 
-      <div className="flex flex-1 overflow-hidden">
-        <div className="flex-1 overflow-y-auto">
-          <POSMenu
-            categories={categories}
-            activeCategory={activeCategory}
-            setActiveCategory={setActiveCategory}
-            addToOrder={addToOrder}
-          />
+          <Dialog open={showAddCategory} onOpenChange={setShowAddCategory}>
+            <DialogTrigger asChild>
+              <Button className="bg-green-600 hover:bg-green-700">
+                Add Category
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Add New Table Category</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4 py-4">
+                <div className="space-y-2">
+                  <Label htmlFor="category">Category Name</Label>
+                  <Input
+                    id="category"
+                    placeholder="Enter category name"
+                    value={newCategory}
+                    onChange={(e) => setNewCategory(e.target.value)}
+                  />
+                </div>
+                <Button
+                  className="w-full bg-green-600 hover:bg-green-700"
+                  onClick={handleAddCategory}
+                  disabled={!newCategory.trim()}
+                >
+                  Add Category
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
+        </header>
+
+        <div className="space-y-8">
+          {/* Render tables by category */}
+          {categories.map((category) => (
+            <section key={category}>
+              <h2 className="mb-4 text-xl font-semibold flex items-center gap-2">
+                {getCategoryIcon(category)} {category}
+              </h2>
+              <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
+                {data
+                  .filter((table) => table.category === category)
+                  .map((table) => (
+                    <Card
+                      key={table.id}
+                      className={`border-2 transition-all ${
+                        selectedTable === table.id
+                          ? "ring-2 ring-green-500 ring-offset-2"
+                          : ""
+                      } ${getTableStatusColor(table.status)}`}
+                      onClick={() =>
+                        table.status === "available" &&
+                        handleTableSelect(table.id)
+                      }
+                    >
+                      <CardContent className="p-4 text-center">
+                        <div className="mb-1 text-2xl font-bold">
+                          Table {table.name}
+                        </div>
+                        <div className="text-sm">{table.seats} Seats</div>
+                        <div className="mt-2 text-xs capitalize">
+                          {table.status}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+              </div>
+            </section>
+          ))}
         </div>
 
-        <POSOrderSidebar
-          orderItems={orderItems}
-          updateQuantity={updateQuantity}
-          clearOrder={clearOrder}
-          selectedTable={selectedTable}
-          onTableSelect={handleTableSelect}
-        />
+        <div className="mt-8 flex justify-end">
+          <Button
+            size="lg"
+            className="bg-green-600 hover:bg-green-700 text-white px-8"
+            disabled={!selectedTable}
+            onClick={handleProceed}
+          >
+            Proceed to Menu
+          </Button>
+        </div>
       </div>
     </div>
-  )
+  );
 }
-
