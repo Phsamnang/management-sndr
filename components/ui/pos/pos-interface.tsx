@@ -151,7 +151,7 @@ export default function TableSelection() {
   const handleProceed = () => {
     if (selectedTable) {
       // Navigate to menu page with selected table
-      router.push(`/menu?table=${selectedTable}`);
+      router.push(`/dashboard/menu?table=${selectedTable}`);
     }
   };
 
