@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Grid, Users, Coffee, Utensils, UmbrellaIcon } from "lucide-react";
+import { Grid, Users, Coffee, Utensils, UmbrellaIcon, HouseIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -14,9 +14,8 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { useQuery } from "@tanstack/react-query";
-import { tabelService } from "@/service/table-service";
-import { log } from "node:console";
+import useGetAllTable from "@/hooks/get-all-table";
+
 
 // Table type definition
 type TableStatus = "available" | "occupied" | "reserved" | "maintenance";
@@ -35,10 +34,9 @@ export default function TableSelection() {
   const [newCategory, setNewCategory] = useState("");
   const [showAddCategory, setShowAddCategory] = useState(false);
 
-  const {data,isLoading}=useQuery({
-    queryFn:()=>tabelService.getAllTable(),
-    queryKey:['tables']
-  })
+  
+
+  const {tableInfo,isLoading}=useGetAllTable()
 
 
   // Initial table data with dynamic categories
@@ -141,7 +139,7 @@ export default function TableSelection() {
 
   // Get unique categories from table data
   const categories = Array.from(
-    new Set(data?.map((table) => table.category))
+    new Set(tableInfo?.map((table) => table.category))
   );
 
   const handleTableSelect = (tableId: number) => {
@@ -181,7 +179,7 @@ export default function TableSelection() {
       case "outdoor patio":
         return <UmbrellaIcon className="h-5 w-5" />;
       default:
-        return <Grid className="h-5 w-5" />;
+        return <HouseIcon className="h-5 w-5" />;
     }
   };
 
@@ -258,7 +256,7 @@ export default function TableSelection() {
                 {getCategoryIcon(category)} {category}
               </h2>
               <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
-                {data
+                {tableInfo
                   .filter((table) => table.category === category)
                   .map((table) => (
                     <Card
