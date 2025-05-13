@@ -29,14 +29,13 @@ import { Label } from "@/components/ui/label";
 import useGetAllTable from "@/hooks/get-all-table";
 import { useQuery } from "@tanstack/react-query";
 import { menuService } from "@/service/menu-service";
+import { log } from "console";
 
 // Menu item type definition
 type MenuItem = {
   id: number;
   name: string;
   price: number;
-  description: string;
-  image: string;
   category: string;
 };
 
@@ -47,197 +46,197 @@ type CartItem = MenuItem & {
 type PaymentType = "cash" | "credit" | "digital" | null;
 
 // Initial menu data with dynamic categories
-const initialMenuItems: MenuItem[] = [
-  // Starters
-  {
-    id: 1,
-    name: "Garlic Bread",
-    price: 5.99,
-    description: "Toasted bread with garlic butter and herbs",
-    image: "/placeholder.svg?height=80&width=80",
-    category: "Starters",
-  },
-  {
-    id: 2,
-    name: "Mozzarella Sticks",
-    price: 7.99,
-    description: "Breaded mozzarella with marinara sauce",
-    image: "/placeholder.svg?height=80&width=80",
-    category: "Starters",
-  },
-  {
-    id: 3,
-    name: "Chicken Wings",
-    price: 9.99,
-    description: "Spicy buffalo wings with blue cheese dip",
-    image: "/placeholder.svg?height=80&width=80",
-    category: "Starters",
-  },
-  {
-    id: 4,
-    name: "Loaded Nachos",
-    price: 8.99,
-    description: "Tortilla chips with cheese, jalapeños, and salsa",
-    image: "/placeholder.svg?height=80&width=80",
-    category: "Starters",
-  },
+// const initialMenuItems: MenuItem[] = [
+//   // Starters
+//   {
+//     id: 1,
+//     name: "Garlic Bread",
+//     price: 5.99,
+//     description: "Toasted bread with garlic butter and herbs",
+//     image: "/placeholder.svg?height=80&width=80",
+//     category: "Starters",
+//   },
+//   {
+//     id: 2,
+//     name: "Mozzarella Sticks",
+//     price: 7.99,
+//     description: "Breaded mozzarella with marinara sauce",
+//     image: "/placeholder.svg?height=80&width=80",
+//     category: "Starters",
+//   },
+//   {
+//     id: 3,
+//     name: "Chicken Wings",
+//     price: 9.99,
+//     description: "Spicy buffalo wings with blue cheese dip",
+//     image: "/placeholder.svg?height=80&width=80",
+//     category: "Starters",
+//   },
+//   {
+//     id: 4,
+//     name: "Loaded Nachos",
+//     price: 8.99,
+//     description: "Tortilla chips with cheese, jalapeños, and salsa",
+//     image: "/placeholder.svg?height=80&width=80",
+//     category: "Starters",
+//   },
 
-  // Main Courses
-  {
-    id: 5,
-    name: "Classic Burger",
-    price: 12.99,
-    description: "Beef patty with lettuce, tomato, and special sauce",
-    image: "/placeholder.svg?height=80&width=80",
-    category: "Main Courses",
-  },
-  {
-    id: 6,
-    name: "Margherita Pizza",
-    price: 14.99,
-    description: "Tomato sauce, mozzarella, and fresh basil",
-    image: "/placeholder.svg?height=80&width=80",
-    category: "Main Courses",
-  },
-  {
-    id: 7,
-    name: "Grilled Salmon",
-    price: 18.99,
-    description: "Served with seasonal vegetables and lemon butter",
-    image: "/placeholder.svg?height=80&width=80",
-    category: "Main Courses",
-  },
-  {
-    id: 8,
-    name: "Chicken Alfredo",
-    price: 15.99,
-    description:
-      "Fettuccine pasta with creamy alfredo sauce and grilled chicken",
-    image: "/placeholder.svg?height=80&width=80",
-    category: "Main Courses",
-  },
+//   // Main Courses
+//   {
+//     id: 5,
+//     name: "Classic Burger",
+//     price: 12.99,
+//     description: "Beef patty with lettuce, tomato, and special sauce",
+//     image: "/placeholder.svg?height=80&width=80",
+//     category: "Main Courses",
+//   },
+//   {
+//     id: 6,
+//     name: "Margherita Pizza",
+//     price: 14.99,
+//     description: "Tomato sauce, mozzarella, and fresh basil",
+//     image: "/placeholder.svg?height=80&width=80",
+//     category: "Main Courses",
+//   },
+//   {
+//     id: 7,
+//     name: "Grilled Salmon",
+//     price: 18.99,
+//     description: "Served with seasonal vegetables and lemon butter",
+//     image: "/placeholder.svg?height=80&width=80",
+//     category: "Main Courses",
+//   },
+//   {
+//     id: 8,
+//     name: "Chicken Alfredo",
+//     price: 15.99,
+//     description:
+//       "Fettuccine pasta with creamy alfredo sauce and grilled chicken",
+//     image: "/placeholder.svg?height=80&width=80",
+//     category: "Main Courses",
+//   },
 
-  // Sides
-  {
-    id: 9,
-    name: "French Fries",
-    price: 3.99,
-    description: "Crispy golden fries with sea salt",
-    image: "/placeholder.svg?height=80&width=80",
-    category: "Sides",
-  },
-  {
-    id: 10,
-    name: "Onion Rings",
-    price: 4.99,
-    description: "Beer-battered onion rings",
-    image: "/placeholder.svg?height=80&width=80",
-    category: "Sides",
-  },
-  {
-    id: 11,
-    name: "Side Salad",
-    price: 4.99,
-    description: "Mixed greens with house dressing",
-    image: "/placeholder.svg?height=80&width=80",
-    category: "Sides",
-  },
-  {
-    id: 12,
-    name: "Mashed Potatoes",
-    price: 4.99,
-    description: "Creamy mashed potatoes with gravy",
-    image: "/placeholder.svg?height=80&width=80",
-    category: "Sides",
-  },
+//   // Sides
+//   {
+//     id: 9,
+//     name: "French Fries",
+//     price: 3.99,
+//     description: "Crispy golden fries with sea salt",
+//     image: "/placeholder.svg?height=80&width=80",
+//     category: "Sides",
+//   },
+//   {
+//     id: 10,
+//     name: "Onion Rings",
+//     price: 4.99,
+//     description: "Beer-battered onion rings",
+//     image: "/placeholder.svg?height=80&width=80",
+//     category: "Sides",
+//   },
+//   {
+//     id: 11,
+//     name: "Side Salad",
+//     price: 4.99,
+//     description: "Mixed greens with house dressing",
+//     image: "/placeholder.svg?height=80&width=80",
+//     category: "Sides",
+//   },
+//   {
+//     id: 12,
+//     name: "Mashed Potatoes",
+//     price: 4.99,
+//     description: "Creamy mashed potatoes with gravy",
+//     image: "/placeholder.svg?height=80&width=80",
+//     category: "Sides",
+//   },
 
-  // Desserts
-  {
-    id: 13,
-    name: "Chocolate Cake",
-    price: 6.99,
-    description: "Rich chocolate cake with ganache",
-    image: "/placeholder.svg?height=80&width=80",
-    category: "Desserts",
-  },
-  {
-    id: 14,
-    name: "Cheesecake",
-    price: 7.99,
-    description: "New York style with berry compote",
-    image: "/placeholder.svg?height=80&width=80",
-    category: "Desserts",
-  },
-  {
-    id: 15,
-    name: "Ice Cream Sundae",
-    price: 5.99,
-    description: "Vanilla ice cream with chocolate sauce and nuts",
-    image: "/placeholder.svg?height=80&width=80",
-    category: "Desserts",
-  },
-  {
-    id: 16,
-    name: "Apple Pie",
-    price: 6.99,
-    description: "Warm apple pie with cinnamon and vanilla ice cream",
-    image: "/placeholder.svg?height=80&width=80",
-    category: "Desserts",
-  },
+//   // Desserts
+//   {
+//     id: 13,
+//     name: "Chocolate Cake",
+//     price: 6.99,
+//     description: "Rich chocolate cake with ganache",
+//     image: "/placeholder.svg?height=80&width=80",
+//     category: "Desserts",
+//   },
+//   {
+//     id: 14,
+//     name: "Cheesecake",
+//     price: 7.99,
+//     description: "New York style with berry compote",
+//     image: "/placeholder.svg?height=80&width=80",
+//     category: "Desserts",
+//   },
+//   {
+//     id: 15,
+//     name: "Ice Cream Sundae",
+//     price: 5.99,
+//     description: "Vanilla ice cream with chocolate sauce and nuts",
+//     image: "/placeholder.svg?height=80&width=80",
+//     category: "Desserts",
+//   },
+//   {
+//     id: 16,
+//     name: "Apple Pie",
+//     price: 6.99,
+//     description: "Warm apple pie with cinnamon and vanilla ice cream",
+//     image: "/placeholder.svg?height=80&width=80",
+//     category: "Desserts",
+//   },
 
-  // Beverages
-  {
-    id: 17,
-    name: "Soda",
-    price: 2.99,
-    description: "Cola, lemon-lime, or root beer",
-    image: "/placeholder.svg?height=80&width=80",
-    category: "Beverages",
-  },
-  {
-    id: 18,
-    name: "Iced Tea",
-    price: 2.99,
-    description: "Sweet or unsweetened",
-    image: "/placeholder.svg?height=80&width=80",
-    category: "Beverages",
-  },
-  {
-    id: 19,
-    name: "Coffee",
-    price: 3.49,
-    description: "Regular or decaf",
-    image: "/placeholder.svg?height=80&width=80",
-    category: "Beverages",
-  },
-  {
-    id: 20,
-    name: "Milkshake",
-    price: 5.99,
-    description: "Chocolate, vanilla, or strawberry",
-    image: "/placeholder.svg?height=80&width=80",
-    category: "Beverages",
-  },
+//   // Beverages
+//   {
+//     id: 17,
+//     name: "Soda",
+//     price: 2.99,
+//     description: "Cola, lemon-lime, or root beer",
+//     image: "/placeholder.svg?height=80&width=80",
+//     category: "Beverages",
+//   },
+//   {
+//     id: 18,
+//     name: "Iced Tea",
+//     price: 2.99,
+//     description: "Sweet or unsweetened",
+//     image: "/placeholder.svg?height=80&width=80",
+//     category: "Beverages",
+//   },
+//   {
+//     id: 19,
+//     name: "Coffee",
+//     price: 3.49,
+//     description: "Regular or decaf",
+//     image: "/placeholder.svg?height=80&width=80",
+//     category: "Beverages",
+//   },
+//   {
+//     id: 20,
+//     name: "Milkshake",
+//     price: 5.99,
+//     description: "Chocolate, vanilla, or strawberry",
+//     image: "/placeholder.svg?height=80&width=80",
+//     category: "Beverages",
+//   },
 
-  // Specials
-  {
-    id: 21,
-    name: "Chef's Special Pasta",
-    price: 16.99,
-    description:
-      "Fresh pasta with seasonal ingredients and chef's special sauce",
-    image: "/placeholder.svg?height=80&width=80",
-    category: "Specials",
-  },
-  {
-    id: 22,
-    name: "Catch of the Day",
-    price: 22.99,
-    description: "Fresh fish served with chef's choice of sides",
-    image: "/placeholder.svg?height=80&width=80",
-    category: "Specials",
-  },
-];
+//   // Specials
+//   {
+//     id: 21,
+//     name: "Chef's Special Pasta",
+//     price: 16.99,
+//     description:
+//       "Fresh pasta with seasonal ingredients and chef's special sauce",
+//     image: "/placeholder.svg?height=80&width=80",
+//     category: "Specials",
+//   },
+//   {
+//     id: 22,
+//     name: "Catch of the Day",
+//     price: 22.99,
+//     description: "Fresh fish served with chef's choice of sides",
+//     image: "/placeholder.svg?height=80&width=80",
+//     category: "Specials",
+//   },
+// ];
 
 // Table data for lookup
 // const tableInfo = [
@@ -266,10 +265,10 @@ export default function RestaurantPOS() {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [paymentType, setPaymentType] = useState<PaymentType>(null);
   const [tableId, setTableId] = useState<number | null>(null);
-  const [menuItems, setMenuItems] = useState<MenuItem[]>(initialMenuItems);
+  const [menuItems, setMenuItems] = useState<MenuItem[]>();
   const [activeCategory, setActiveCategory] = useState<string>("");
   const [showAddItemDialog, setShowAddItemDialog] = useState(false);
-  const {tableInfo}=useGetAllTable()
+  const { tableInfo } = useGetAllTable();
   const [newItem, setNewItem] = useState<Partial<MenuItem>>({
     name: "",
     price: 0,
@@ -280,11 +279,35 @@ export default function RestaurantPOS() {
   const [newCategory, setNewCategory] = useState("");
   const [showAddCategoryDialog, setShowAddCategoryDialog] = useState(false);
 
+  const tableParam = searchParams.get("table");
 
+  useEffect(() => {
+    // Get table number from URL
+    
+    if (tableParam) {
+      setTableId(Number.parseInt(tableParam, 10));
+    } else {
+      // Redirect back to table selection if no table is selected
+      router.push("/");
+    }
+  }, [searchParams, router]);
+  const { data } = useQuery({
+    queryFn: () => menuService.getAllMenus(Number(tableParam)),
+    queryKey: ["menus",tableParam]
+  });
+
+  console.log(data, "menus");
+
+  useEffect(() => {
+    if(data){
+    setMenuItems(data);
+    }
+    
+  }, []);
 
   // Get unique categories from menu items
   const categories = Array.from(
-    new Set(menuItems.map((item) => item.category))
+    new Set(data?.map((item) => item.category))
   ).sort();
 
   useEffect(() => {
@@ -293,23 +316,6 @@ export default function RestaurantPOS() {
       setActiveCategory(categories[0]);
     }
   }, [categories, activeCategory]);
-
-  useEffect(() => {
-    // Get table number from URL
-    const tableParam = searchParams.get("table");
-    if (tableParam) {
-      setTableId(Number.parseInt(tableParam, 10));
-    } else {
-      // Redirect back to table selection if no table is selected
-      router.push("/");
-    }
-  }, [searchParams, router]);
-    const { data } = useQuery({
-      queryFn: () => menuService.getAllMenus(tableId),
-      queryKey:['menus']
-    });
-
-    console.log(data,"menus")
 
   const addToCart = (item: MenuItem) => {
     setCart((prevCart) => {
@@ -351,23 +357,19 @@ export default function RestaurantPOS() {
 
   const handleAddNewItem = () => {
     if (newItem.name && newItem.price && newItem.category) {
-      const newId = Math.max(...menuItems.map((item) => item.id), 0) + 1;
+      const newId = Math.max(...data?.map((item) => item.id), 0) + 1;
       const itemToAdd: MenuItem = {
         id: newId,
         name: newItem.name,
         price: Number(newItem.price),
-        description: newItem.description || "",
-        image: newItem.image || "/placeholder.svg?height=80&width=80",
         category: newItem.category,
       };
 
-      setMenuItems([...menuItems, itemToAdd]);
+      setMenuItems([...data, itemToAdd]);
       setNewItem({
         name: "",
         price: 0,
-        description: "",
         category: "",
-        image: "/placeholder.svg?height=80&width=80",
       });
       setShowAddItemDialog(false);
     }
@@ -376,17 +378,15 @@ export default function RestaurantPOS() {
   const handleAddNewCategory = () => {
     if (newCategory.trim()) {
       // Add a new item with the new category
-      const newId = Math.max(...menuItems.map((item) => item.id), 0) + 1;
+      const newId = Math.max(...data.map((item) => item.id), 0) + 1;
       const itemToAdd: MenuItem = {
         id: newId,
         name: `New ${newCategory} Item`,
         price: 9.99,
-        description: `A delicious new item in the ${newCategory} category`,
-        image: "/placeholder.svg?height=80&width=80",
         category: newCategory.trim(),
       };
 
-      setMenuItems([...menuItems, itemToAdd]);
+      setMenuItems([...data, itemToAdd]);
       setActiveCategory(newCategory.trim());
       setNewCategory("");
       setShowAddCategoryDialog(false);
@@ -408,11 +408,11 @@ export default function RestaurantPOS() {
             <div className="flex-1">
               <div className="flex justify-between">
                 <h3 className="font-medium">{item.name}</h3>
-                <p className="font-semibold">${item.price.toFixed(2)}</p>
+                <p className="font-semibold">${item.price}</p>
               </div>
-              <p className="text-sm text-muted-foreground line-clamp-2">
+              {/* <p className="text-sm text-muted-foreground line-clamp-2">
                 {item.description}
-              </p>
+              </p> */}
               <div className="mt-2 flex items-center gap-2">
                 {cartItem ? (
                   <div className="flex items-center gap-2">
@@ -539,133 +539,6 @@ export default function RestaurantPOS() {
                 )}
               </div>
             </div>
-
-            <div className="flex gap-2">
-              {/* Add New Menu Item Dialog */}
-              <Dialog
-                open={showAddItemDialog}
-                onOpenChange={setShowAddItemDialog}
-              >
-                <DialogTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className="text-green-600 border-green-600 hover:bg-green-50"
-                  >
-                    <Plus className="h-4 w-4 mr-2" /> Add Item
-                  </Button>
-                </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>Add New Menu Item</DialogTitle>
-                  </DialogHeader>
-                  <div className="space-y-4 py-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="name">Item Name</Label>
-                      <Input
-                        id="name"
-                        placeholder="Enter item name"
-                        value={newItem.name}
-                        onChange={(e) =>
-                          setNewItem({ ...newItem, name: e.target.value })
-                        }
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="price">Price</Label>
-                      <Input
-                        id="price"
-                        type="number"
-                        step="0.01"
-                        placeholder="Enter price"
-                        value={newItem.price || ""}
-                        onChange={(e) =>
-                          setNewItem({
-                            ...newItem,
-                            price: Number.parseFloat(e.target.value),
-                          })
-                        }
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="description">Description</Label>
-                      <Input
-                        id="description"
-                        placeholder="Enter description"
-                        value={newItem.description}
-                        onChange={(e) =>
-                          setNewItem({
-                            ...newItem,
-                            description: e.target.value,
-                          })
-                        }
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="category">Category</Label>
-                      <select
-                        id="category"
-                        className="w-full rounded-md border border-input bg-background px-3 py-2"
-                        value={newItem.category}
-                        onChange={(e) =>
-                          setNewItem({ ...newItem, category: e.target.value })
-                        }
-                      >
-                        <option value="">Select a category</option>
-                        {categories.map((category) => (
-                          <option key={category} value={category}>
-                            {category}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                    <Button
-                      className="w-full bg-green-600 hover:bg-green-700"
-                      onClick={handleAddNewItem}
-                      disabled={
-                        !newItem.name || !newItem.price || !newItem.category
-                      }
-                    >
-                      Add Item
-                    </Button>
-                  </div>
-                </DialogContent>
-              </Dialog>
-
-              {/* Add New Category Dialog */}
-              <Dialog
-                open={showAddCategoryDialog}
-                onOpenChange={setShowAddCategoryDialog}
-              >
-                <DialogTrigger asChild>
-                  <Button className="bg-green-600 hover:bg-green-700">
-                    <Plus className="h-4 w-4 mr-2" /> Add Category
-                  </Button>
-                </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>Add New Menu Category</DialogTitle>
-                  </DialogHeader>
-                  <div className="space-y-4 py-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="category">Category Name</Label>
-                      <Input
-                        id="category"
-                        placeholder="Enter category name"
-                        value={newCategory}
-                        onChange={(e) => setNewCategory(e.target.value)}
-                      />
-                    </div>
-                    <Button
-                      className="w-full bg-green-600 hover:bg-green-700"
-                      onClick={handleAddNewCategory}
-                      disabled={!newCategory.trim()}
-                    >
-                      Add Category
-                    </Button>
-                  </div>
-                </DialogContent>
-              </Dialog>
-            </div>
           </header>
 
           <Tabs
@@ -692,7 +565,7 @@ export default function RestaurantPOS() {
             <div className="flex-1 overflow-auto p-4">
               {categories.map((category) => (
                 <TabsContent key={category} value={category} className="mt-0">
-                  {menuItems
+                  {data
                     .filter((item) => item.category === category)
                     .map((item) => renderMenuItem(item))}
                 </TabsContent>
