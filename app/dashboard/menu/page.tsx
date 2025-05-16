@@ -283,7 +283,7 @@ export default function RestaurantPOS() {
 
   useEffect(() => {
     // Get table number from URL
-    
+
     if (tableParam) {
       setTableId(Number.parseInt(tableParam, 10));
     } else {
@@ -293,16 +293,15 @@ export default function RestaurantPOS() {
   }, [searchParams, router]);
   const { data } = useQuery({
     queryFn: () => menuService.getAllMenus(Number(tableParam)),
-    queryKey: ["menus",tableParam]
+    queryKey: ["menus", tableParam],
   });
 
   console.log(data, "menus");
 
   useEffect(() => {
-    if(data){
-    setMenuItems(data);
+    if (data) {
+      setMenuItems(data);
     }
-    
   }, []);
 
   // Get unique categories from menu items

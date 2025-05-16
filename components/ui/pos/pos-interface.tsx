@@ -3,7 +3,14 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Grid, Users, Coffee, Utensils, UmbrellaIcon, HouseIcon } from "lucide-react";
+import {
+  Grid,
+  Users,
+  Coffee,
+  Utensils,
+  UmbrellaIcon,
+  HouseIcon,
+} from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -15,7 +22,8 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import useGetAllTable from "@/hooks/get-all-table";
-
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { SaleService } from "@/service/sale-service";
 
 // Table type definition
 type TableStatus = "available" | "occupied" | "reserved" | "maintenance";
@@ -34,10 +42,18 @@ export default function TableSelection() {
   const [newCategory, setNewCategory] = useState("");
   const [showAddCategory, setShowAddCategory] = useState(false);
 
-  
+  const useClient=useQueryClient()
 
-  const {tableInfo,isLoading}=useGetAllTable()
+  const { tableInfo, isLoading } = useGetAllTable();
 
+
+    const createSale = useMutation({
+      mutationFn: (id: number) => SaleService.createSale(id),
+      onSuccess: () => {
+        router.push(`/dashboard/menu?table=${selectedTable}`);
+        useClient.invalidateQueries(['table'])
+      },
+    });
 
   // Initial table data with dynamic categories
   const [tableData, setTableData] = useState<Table[]>([
@@ -135,7 +151,7 @@ export default function TableSelection() {
     },
   ]);
 
-  if(isLoading) return <>Loading...</>
+  if (isLoading) return <>Loading...</>;
 
   // Get unique categories from table data
   const categories = Array.from(
@@ -144,13 +160,19 @@ export default function TableSelection() {
 
   const handleTableSelect = (tableId: number) => {
     setSelectedTable(tableId);
+    const table=tableInfo?.find((t:{id:number})=>t.id===tableId);
+    if(table?.status==='occupied'){
+      router.push(`/dashboard/menu?table=${tableId}`);
+    }
   };
 
+
+
   const handleProceed = () => {
-    if (selectedTable) {
-      // Navigate to menu page with selected table
-      router.push(`/dashboard/menu?table=${selectedTable}`);
-    }
+    // if (selectedTable) {
+    //   // Navigate to menu page with selected table
+    // }
+    createSale.mutate(selectedTable as number)
   };
 
   const getTableStatusColor = (status: TableStatus) => {
@@ -158,7 +180,7 @@ export default function TableSelection() {
       case "available":
         return "bg-green-100 border-green-500 hover:bg-green-200";
       case "occupied":
-        return "bg-red-100 border-red-500 text-red-700 opacity-60 cursor-not-allowed";
+        return "bg-red-100 border-red-500 text-red-700 opacity-60";
       case "reserved":
         return "bg-amber-100 border-amber-500 text-amber-700 opacity-60 cursor-not-allowed";
       case "maintenance":
@@ -215,42 +237,10 @@ export default function TableSelection() {
               Choose a table to place an order
             </p>
           </div>
-
-          <Dialog open={showAddCategory} onOpenChange={setShowAddCategory}>
-            <DialogTrigger asChild>
-              <Button className="bg-green-600 hover:bg-green-700">
-                Add Category
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Add New Table Category</DialogTitle>
-              </DialogHeader>
-              <div className="space-y-4 py-4">
-                <div className="space-y-2">
-                  <Label htmlFor="category">Category Name</Label>
-                  <Input
-                    id="category"
-                    placeholder="Enter category name"
-                    value={newCategory}
-                    onChange={(e) => setNewCategory(e.target.value)}
-                  />
-                </div>
-                <Button
-                  className="w-full bg-green-600 hover:bg-green-700"
-                  onClick={handleAddCategory}
-                  disabled={!newCategory.trim()}
-                >
-                  Add Category
-                </Button>
-              </div>
-            </DialogContent>
-          </Dialog>
         </header>
-
         <div className="space-y-8">
           {/* Render tables by category */}
-          {categories.map((category) => (
+          {categories?.map((category) => (
             <section key={category}>
               <h2 className="mb-4 text-xl font-semibold flex items-center gap-2">
                 {getCategoryIcon(category)} {category}
@@ -267,7 +257,6 @@ export default function TableSelection() {
                           : ""
                       } ${getTableStatusColor(table.status)}`}
                       onClick={() =>
-                        table.status === "available" &&
                         handleTableSelect(table.id)
                       }
                     >
