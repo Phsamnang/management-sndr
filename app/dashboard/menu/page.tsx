@@ -306,13 +306,13 @@ export default function RestaurantPOS() {
 
   // Get unique categories from menu items
   const categories = Array.from(
-    new Set(data?.map((item) => item.category))
+    new Set(data?.map((item:MenuItem) => item.category))
   ).sort();
 
   useEffect(() => {
     // Set default active category
     if (categories.length > 0 && !activeCategory) {
-      setActiveCategory(categories[0]);
+      setActiveCategory(categories[0]!);
     }
   }, [categories, activeCategory]);
 
@@ -354,43 +354,6 @@ export default function RestaurantPOS() {
     return cart.reduce((count, item) => count + item.quantity, 0);
   };
 
-  const handleAddNewItem = () => {
-    if (newItem.name && newItem.price && newItem.category) {
-      const newId = Math.max(...data?.map((item) => item.id), 0) + 1;
-      const itemToAdd: MenuItem = {
-        id: newId,
-        name: newItem.name,
-        price: Number(newItem.price),
-        category: newItem.category,
-      };
-
-      setMenuItems([...data, itemToAdd]);
-      setNewItem({
-        name: "",
-        price: 0,
-        category: "",
-      });
-      setShowAddItemDialog(false);
-    }
-  };
-
-  const handleAddNewCategory = () => {
-    if (newCategory.trim()) {
-      // Add a new item with the new category
-      const newId = Math.max(...data.map((item) => item.id), 0) + 1;
-      const itemToAdd: MenuItem = {
-        id: newId,
-        name: `New ${newCategory} Item`,
-        price: 9.99,
-        category: newCategory.trim(),
-      };
-
-      setMenuItems([...data, itemToAdd]);
-      setActiveCategory(newCategory.trim());
-      setNewCategory("");
-      setShowAddCategoryDialog(false);
-    }
-  };
 
   const renderMenuItem = (item: MenuItem) => {
     const cartItem = cart?.find((cartItem) => cartItem.id === item.id);
@@ -509,7 +472,7 @@ export default function RestaurantPOS() {
 
   const getTableInfo = () => {
     if (!tableId) return null;
-    return tableInfo?.find((t) => t.id === tableId);
+    return tableInfo?.find((t:{id:number}) => t.id === tableId);
   };
 
   const table = getTableInfo();
@@ -546,7 +509,7 @@ export default function RestaurantPOS() {
             className="flex-1"
           >
             <div className="border-b bg-white">
-              <ScrollArea className="w-full" orientation="horizontal">
+              <ScrollArea className="w-full">
                 <TabsList className="w-full justify-start rounded-none border-b-0 bg-transparent p-0">
                   {categories.map((category) => (
                     <TabsTrigger
