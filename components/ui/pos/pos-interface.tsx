@@ -40,8 +40,6 @@ export default function TableSelection() {
   const router = useRouter();
   const [selectedTable, setSelectedTable] = useState<number | null>(null);
   const [newCategory, setNewCategory] = useState("");
-  const [showAddCategory, setShowAddCategory] = useState(false);
-
   const useClient=useQueryClient()
 
   const { tableInfo, isLoading } = useGetAllTable();

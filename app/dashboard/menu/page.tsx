@@ -27,9 +27,10 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import useGetAllTable from "@/hooks/get-all-table";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { menuService } from "@/service/menu-service";
 import { log } from "console";
+import { SaleService } from "@/service/sale-service";
 
 // Menu item type definition
 type MenuItem = {
@@ -45,240 +46,17 @@ type CartItem = MenuItem & {
 
 type PaymentType = "cash" | "credit" | "digital" | null;
 
-// Initial menu data with dynamic categories
-// const initialMenuItems: MenuItem[] = [
-//   // Starters
-//   {
-//     id: 1,
-//     name: "Garlic Bread",
-//     price: 5.99,
-//     description: "Toasted bread with garlic butter and herbs",
-//     image: "/placeholder.svg?height=80&width=80",
-//     category: "Starters",
-//   },
-//   {
-//     id: 2,
-//     name: "Mozzarella Sticks",
-//     price: 7.99,
-//     description: "Breaded mozzarella with marinara sauce",
-//     image: "/placeholder.svg?height=80&width=80",
-//     category: "Starters",
-//   },
-//   {
-//     id: 3,
-//     name: "Chicken Wings",
-//     price: 9.99,
-//     description: "Spicy buffalo wings with blue cheese dip",
-//     image: "/placeholder.svg?height=80&width=80",
-//     category: "Starters",
-//   },
-//   {
-//     id: 4,
-//     name: "Loaded Nachos",
-//     price: 8.99,
-//     description: "Tortilla chips with cheese, jalapeños, and salsa",
-//     image: "/placeholder.svg?height=80&width=80",
-//     category: "Starters",
-//   },
-
-//   // Main Courses
-//   {
-//     id: 5,
-//     name: "Classic Burger",
-//     price: 12.99,
-//     description: "Beef patty with lettuce, tomato, and special sauce",
-//     image: "/placeholder.svg?height=80&width=80",
-//     category: "Main Courses",
-//   },
-//   {
-//     id: 6,
-//     name: "Margherita Pizza",
-//     price: 14.99,
-//     description: "Tomato sauce, mozzarella, and fresh basil",
-//     image: "/placeholder.svg?height=80&width=80",
-//     category: "Main Courses",
-//   },
-//   {
-//     id: 7,
-//     name: "Grilled Salmon",
-//     price: 18.99,
-//     description: "Served with seasonal vegetables and lemon butter",
-//     image: "/placeholder.svg?height=80&width=80",
-//     category: "Main Courses",
-//   },
-//   {
-//     id: 8,
-//     name: "Chicken Alfredo",
-//     price: 15.99,
-//     description:
-//       "Fettuccine pasta with creamy alfredo sauce and grilled chicken",
-//     image: "/placeholder.svg?height=80&width=80",
-//     category: "Main Courses",
-//   },
-
-//   // Sides
-//   {
-//     id: 9,
-//     name: "French Fries",
-//     price: 3.99,
-//     description: "Crispy golden fries with sea salt",
-//     image: "/placeholder.svg?height=80&width=80",
-//     category: "Sides",
-//   },
-//   {
-//     id: 10,
-//     name: "Onion Rings",
-//     price: 4.99,
-//     description: "Beer-battered onion rings",
-//     image: "/placeholder.svg?height=80&width=80",
-//     category: "Sides",
-//   },
-//   {
-//     id: 11,
-//     name: "Side Salad",
-//     price: 4.99,
-//     description: "Mixed greens with house dressing",
-//     image: "/placeholder.svg?height=80&width=80",
-//     category: "Sides",
-//   },
-//   {
-//     id: 12,
-//     name: "Mashed Potatoes",
-//     price: 4.99,
-//     description: "Creamy mashed potatoes with gravy",
-//     image: "/placeholder.svg?height=80&width=80",
-//     category: "Sides",
-//   },
-
-//   // Desserts
-//   {
-//     id: 13,
-//     name: "Chocolate Cake",
-//     price: 6.99,
-//     description: "Rich chocolate cake with ganache",
-//     image: "/placeholder.svg?height=80&width=80",
-//     category: "Desserts",
-//   },
-//   {
-//     id: 14,
-//     name: "Cheesecake",
-//     price: 7.99,
-//     description: "New York style with berry compote",
-//     image: "/placeholder.svg?height=80&width=80",
-//     category: "Desserts",
-//   },
-//   {
-//     id: 15,
-//     name: "Ice Cream Sundae",
-//     price: 5.99,
-//     description: "Vanilla ice cream with chocolate sauce and nuts",
-//     image: "/placeholder.svg?height=80&width=80",
-//     category: "Desserts",
-//   },
-//   {
-//     id: 16,
-//     name: "Apple Pie",
-//     price: 6.99,
-//     description: "Warm apple pie with cinnamon and vanilla ice cream",
-//     image: "/placeholder.svg?height=80&width=80",
-//     category: "Desserts",
-//   },
-
-//   // Beverages
-//   {
-//     id: 17,
-//     name: "Soda",
-//     price: 2.99,
-//     description: "Cola, lemon-lime, or root beer",
-//     image: "/placeholder.svg?height=80&width=80",
-//     category: "Beverages",
-//   },
-//   {
-//     id: 18,
-//     name: "Iced Tea",
-//     price: 2.99,
-//     description: "Sweet or unsweetened",
-//     image: "/placeholder.svg?height=80&width=80",
-//     category: "Beverages",
-//   },
-//   {
-//     id: 19,
-//     name: "Coffee",
-//     price: 3.49,
-//     description: "Regular or decaf",
-//     image: "/placeholder.svg?height=80&width=80",
-//     category: "Beverages",
-//   },
-//   {
-//     id: 20,
-//     name: "Milkshake",
-//     price: 5.99,
-//     description: "Chocolate, vanilla, or strawberry",
-//     image: "/placeholder.svg?height=80&width=80",
-//     category: "Beverages",
-//   },
-
-//   // Specials
-//   {
-//     id: 21,
-//     name: "Chef's Special Pasta",
-//     price: 16.99,
-//     description:
-//       "Fresh pasta with seasonal ingredients and chef's special sauce",
-//     image: "/placeholder.svg?height=80&width=80",
-//     category: "Specials",
-//   },
-//   {
-//     id: 22,
-//     name: "Catch of the Day",
-//     price: 22.99,
-//     description: "Fresh fish served with chef's choice of sides",
-//     image: "/placeholder.svg?height=80&width=80",
-//     category: "Specials",
-//   },
-// ];
-
-// Table data for lookup
-// const tableInfo = [
-//   { id: 1, number: 1, category: "Main Dining" },
-//   { id: 2, number: 2, category: "Main Dining" },
-//   { id: 3, number: 3, category: "Main Dining" },
-//   { id: 4, number: 4, category: "Main Dining" },
-//   { id: 5, number: 5, category: "Main Dining" },
-//   { id: 6, number: 6, category: "Main Dining" },
-//   { id: 7, number: 7, category: "VIP Section" },
-//   { id: 8, number: 8, category: "VIP Section" },
-//   { id: 9, number: 9, category: "Bar Area" },
-//   { id: 10, number: 10, category: "Bar Area" },
-//   { id: 11, number: 11, category: "Bar Area" },
-//   { id: 12, number: 12, category: "Bar Area" },
-//   { id: 13, number: 13, category: "Outdoor Patio" },
-//   { id: 14, number: 14, category: "Outdoor Patio" },
-//   { id: 15, number: 15, category: "Outdoor Patio" },
-//   { id: 16, number: 16, category: "Private Room" },
-//   { id: 17, number: 17, category: "Private Room" },
-// ];
-
 export default function RestaurantPOS() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [cart, setCart] = useState<CartItem[]>([]);
   const [paymentType, setPaymentType] = useState<PaymentType>(null);
   const [tableId, setTableId] = useState<number | null>(null);
-  const [menuItems, setMenuItems] = useState<MenuItem[]>();
   const [activeCategory, setActiveCategory] = useState<string>("");
-  const [showAddItemDialog, setShowAddItemDialog] = useState(false);
   const { tableInfo } = useGetAllTable();
-  const [newItem, setNewItem] = useState<Partial<MenuItem>>({
-    name: "",
-    price: 0,
-    description: "",
-    category: "",
-    image: "/placeholder.svg?height=80&width=80",
-  });
-  const [newCategory, setNewCategory] = useState("");
-  const [showAddCategoryDialog, setShowAddCategoryDialog] = useState(false);
-
+  const [qty,setQty]=useState(0)
+  
+  const useClient = useQueryClient();
   const tableParam = searchParams.get("table");
 
   useEffect(() => {
@@ -291,12 +69,25 @@ export default function RestaurantPOS() {
       router.push("/");
     }
   }, [searchParams, router]);
+
+
   const { data } = useQuery({
     queryFn: () => menuService.getAllMenus(Number(tableParam)),
     queryKey: ["menus", tableParam],
   });
 
-  console.log(data, "menus");
+    const sales = useQuery({
+      queryFn: () => SaleService.getSale(Number(tableParam)),
+      queryKey: ["sale", tableParam],
+    });
+
+  const orderFood=useMutation({
+    mutationFn:(data)=>SaleService.orderFood(data),
+    onSuccess:()=>{
+      alert("success")
+      useClient.invalidateQueries(['menus'])
+    }
+  })
 
   useEffect(() => {
     if (data) {
@@ -316,20 +107,14 @@ export default function RestaurantPOS() {
     }
   }, [categories, activeCategory]);
 
-  const addToCart = (item: MenuItem) => {
-    setCart((prevCart) => {
-      const existingItem = prevCart.find((cartItem) => cartItem.id === item.id);
-
-      if (existingItem) {
-        return prevCart.map((cartItem) =>
-          cartItem.id === item.id
-            ? { ...cartItem, quantity: cartItem.quantity + 1 }
-            : cartItem
-        );
-      } else {
-        return [...prevCart, { ...item, quantity: 1 }];
-      }
-    });
+  const addToCart = (menusId:number,qty:number) => {
+       const data={
+        menusId:menusId,
+        saleId:sales?.data?.id,
+        qty:qty,
+        tableId:tableId
+       }
+       orderFood.mutate(data);
   };
 
   const removeFromCart = (itemId: number) => {
@@ -349,7 +134,7 @@ export default function RestaurantPOS() {
   const getCartTotal = () => {
     return cart.reduce((total, item) => total + item.price * item.quantity, 0);
   };
-
+ 
   const getCartItemCount = () => {
     return cart.reduce((count, item) => count + item.quantity, 0);
   };
@@ -382,6 +167,8 @@ export default function RestaurantPOS() {
                       type="number"
                       onChange={(e) => {
                         const value = Number.parseInt(e.target.value);
+
+                        setQty(value)
                     
                       }}
                       className="h-8 text-center"
@@ -391,7 +178,7 @@ export default function RestaurantPOS() {
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => addToCart(item)}
+                      onClick={() => addToCart(item?.id,qty)}
                       className="bg-green-100 text-green-700 hover:bg-green-200 hover:text-green-800 border-green-300"
                     >
                       Add
@@ -596,7 +383,7 @@ export default function RestaurantPOS() {
                         variant="outline"
                         size="icon"
                         className="h-7 w-7"
-                        onClick={() => addToCart(item)}
+                        onClick={() => addToCart(item.id,qty)}
                       >
                         <Plus className="h-3 w-3" />
                       </Button>
