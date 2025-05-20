@@ -13,7 +13,7 @@ const createSale=async(tableId:number)=>{
 }
 
 const orderFood=async(data:any)=>{
-    const rs=await http.post(ServiveID.ORDER,{data})
+    const rs=await http.post(ServiveID.ORDER,{...data})
 
     return rs.data;
 }
@@ -23,8 +23,14 @@ const getSale=async(tableId:number)=>{
     return res.data;
 }
 
+const getSaleById=async(saleId:number)=>{
+    const res=await http.get(ServiveID.SALE+`/${saleId}/items`);
+    return res.data;
+}
+
 export const SaleService={
     createSale,
     orderFood,
-    getSale
+    getSale,
+    getSaleById
 }

@@ -17,21 +17,11 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { useRouter, useSearchParams } from "next/navigation";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import useGetAllTable from "@/hooks/get-all-table";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { menuService } from "@/service/menu-service";
-import { log } from "console";
 import { SaleService } from "@/service/sale-service";
-
 // Menu item type definition
 type MenuItem = {
   id: number;
@@ -71,7 +61,7 @@ export default function RestaurantPOS() {
   }, [searchParams, router]);
 
 
-  const { data } = useQuery({
+  const { data,isLoading } = useQuery({
     queryFn: () => menuService.getAllMenus(Number(tableParam)),
     queryKey: ["menus", tableParam],
   });
@@ -84,16 +74,22 @@ export default function RestaurantPOS() {
   const orderFood=useMutation({
     mutationFn:(data)=>SaleService.orderFood(data),
     onSuccess:()=>{
-      alert("success")
       useClient.invalidateQueries(['menus'])
     }
   })
 
-  useEffect(() => {
-    if (data) {
-      setMenuItems(data);
-    }
-  }, []);
+
+    const getItem = useQuery({
+      queryFn: () => SaleService.getSaleById(sales?.data?.id),
+      queryKey: ["saleItems", tableParam],
+    });
+
+
+    console.log(getItem?.data)
+
+
+
+   
 
   // Get unique categories from menu items
   const categories = Array.from(
@@ -114,6 +110,7 @@ export default function RestaurantPOS() {
         qty:qty,
         tableId:tableId
        }
+
        orderFood.mutate(data);
   };
 
@@ -204,7 +201,7 @@ export default function RestaurantPOS() {
   };
 
   const handlePrintReceipt = () => {
-    if (cart.length > 0) {
+    if (getItem?.data?.saleItemResponse.length > 0) {
       const table = tableInfo?.find((t) => t.id === tableId);
 
       // Create receipt content
@@ -213,20 +210,18 @@ export default function RestaurantPOS() {
         -----------------
         ${new Date().toLocaleString()}
         
-        Table: ${table ? `${table.number} (${table.category})` : tableId}
+        Table: ${table ? `${table.name} (${table.category})` : tableId}
         
-        ${cart
+        ${getItem?.data?.saleItemResponse?
           .map(
             (item) =>
               `${item.name} x${item.quantity} $${(
-                item.price * item.quantity
-              ).toFixed(2)}`
+                item.priceAtSale * item.quantity
+              )}`
           )
           .join("\n")}
-        
-        Subtotal: $${getCartTotal().toFixed(2)}
-        Tax (8%): $${(getCartTotal() * 0.08).toFixed(2)}
-        Total: $${(getCartTotal() * 1.08).toFixed(2)}
+    
+        Total: $${getItem?.data?.totalAmount}
         
         Payment Method: ${paymentType ? paymentType.toUpperCase() : "N/A"}
       `;
@@ -347,13 +342,13 @@ export default function RestaurantPOS() {
           </header>
 
           <ScrollArea className="flex-1 p-4">
-            {cart.length === 0 ? (
+            {getItem?.data?.saleItemResponse?.length === 0 ? (
               <div className="flex h-32 items-center justify-center text-muted-foreground">
                 Your order is empty
               </div>
             ) : (
               <div className="space-y-4">
-                {cart.map((item) => (
+                {getItem?.data?.saleItemResponse?.map((item) => (
                   <div
                     key={item.id}
                     className="flex items-center justify-between"
@@ -361,15 +356,15 @@ export default function RestaurantPOS() {
                     <div className="flex-1">
                       <div className="flex items-center justify-between">
                         <span className="font-medium">{item.name}</span>
-                        <span>${(item.price * item.quantity).toFixed(2)}</span>
+                        <span>{item.priceAtSale * item.quantity}</span>
                       </div>
                       <div className="flex items-center gap-2 text-sm text-muted-foreground">
                         <span>
-                          ${item.price.toFixed(2)} × {item.quantity}
+                        {item.priceAtSale} × {item.quantity}
                         </span>
                       </div>
                     </div>
-                    <div className="ml-4 flex items-center gap-2">
+                    {/* <div className="ml-4 flex items-center gap-2">
                       <Button
                         variant="outline"
                         size="icon"
@@ -383,11 +378,11 @@ export default function RestaurantPOS() {
                         variant="outline"
                         size="icon"
                         className="h-7 w-7"
-                        onClick={() => addToCart(item.id,qty)}
+                        onClick={() => addToCart(item.id, qty)}
                       >
                         <Plus className="h-3 w-3" />
                       </Button>
-                    </div>
+                    </div> */}
                   </div>
                 ))}
               </div>
@@ -407,7 +402,7 @@ export default function RestaurantPOS() {
               <Separator />
               <div className="flex justify-between font-bold">
                 <span>Total</span>
-                <span>${(getCartTotal() * 1.08).toFixed(2)}</span>
+                <span>${getItem?.data?.totalAmount}</span>
               </div>
             </div>
 
@@ -461,7 +456,7 @@ export default function RestaurantPOS() {
               <Button
                 className="bg-white text-green-600 border-green-600 hover:bg-green-50"
                 size="lg"
-                disabled={cart.length === 0}
+                disabled={getItem?.data?.saleItemResponse?.length === 0}
                 onClick={handlePrintReceipt}
               >
                 Print Receipt
