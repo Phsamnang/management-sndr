@@ -170,16 +170,7 @@ export default function RestaurantPOS() {
                       Add
                     </Button>
                   )}
-                  {cartItem && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => removeItemFromCart(item.id)}
-                      className="text-red-600 border-red-300 hover:bg-red-50"
-                    >
-                      Remove
-                    </Button>
-                  )}
+          
                 </div>
               </div>
             </div>
@@ -201,9 +192,8 @@ export default function RestaurantPOS() {
         
         Table: ${table ? `${table.name} (${table.category})` : tableId}
         
-        ${getItem?.data?.saleItemResponse?
-          .map(
-            (item) =>
+        ${getItem?.data?.saleItemResponse?.map(
+            (item:any) =>
               `${item.name} x${item.quantity} $${(
                 item.priceAtSale * item.quantity
               )}`
@@ -337,7 +327,7 @@ export default function RestaurantPOS() {
               </div>
             ) : (
               <div className="space-y-4">
-                {getItem?.data?.saleItemResponse?.map((item) => (
+                {getItem?.data?.saleItemResponse?.map((item:any) => (
                   <div
                     key={item.id}
                     className="flex items-center justify-between"
