@@ -391,14 +391,6 @@ export default function RestaurantPOS() {
 
           <div className="border-t p-4">
             <div className="space-y-2">
-              <div className="flex justify-between">
-                <span>Subtotal</span>
-                <span>${getCartTotal().toFixed(2)}</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Tax (8%)</span>
-                <span>${(getCartTotal() * 0.08).toFixed(2)}</span>
-              </div>
               <Separator />
               <div className="flex justify-between font-bold">
                 <span>Total</span>
@@ -440,7 +432,7 @@ export default function RestaurantPOS() {
                   variant="outline"
                   className={`flex flex-col items-center gap-1 py-3 ${
                     paymentType === "digital"
-                      ? "bg-green-100 text-green-700 border-green-500"
+                      ? "bg-green-100 text-green-700 border-green-500"      
                       : "hover:bg-green-50 hover:text-green-600"
                   }`}
                   onClick={() => setPaymentType("digital")}
