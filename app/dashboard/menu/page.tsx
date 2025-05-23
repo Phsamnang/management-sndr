@@ -74,7 +74,7 @@ export default function RestaurantPOS() {
   const orderFood=useMutation({
     mutationFn:(data)=>SaleService.orderFood(data),
     onSuccess:()=>{
-      useClient.invalidateQueries(['menus'])
+      useClient.invalidateQueries({queryKey:['menus']})
     }
   })
 
@@ -84,13 +84,6 @@ export default function RestaurantPOS() {
       queryKey: ["saleItems", tableParam],
     });
 
-
-    console.log(getItem?.data)
-
-
-
-   
-
   // Get unique categories from menu items
   const categories = Array.from(
     new Set(data?.map((item:MenuItem) => item.category))
@@ -99,7 +92,7 @@ export default function RestaurantPOS() {
   useEffect(() => {
     // Set default active category
     if (categories.length > 0 && !activeCategory) {
-      setActiveCategory(categories[0]!);
+      setActiveCategory(categories[0] as string);
     }
   }, [categories, activeCategory]);
 
@@ -111,7 +104,7 @@ export default function RestaurantPOS() {
         tableId:tableId
        }
 
-       orderFood.mutate(data);
+       orderFood.mutate(data as any);
   };
 
   const removeFromCart = (itemId: number) => {
@@ -144,11 +137,7 @@ export default function RestaurantPOS() {
       <Card key={item.id} className="mb-3">
         <CardContent className="p-3">
           <div className="flex items-center gap-3">
-            <img
-              src={item.image || "/placeholder.svg"}
-              alt={item.name}
-              className="h-20 w-20 rounded-md object-cover"
-            />
+           
             <div className="flex-1">
               <div className="flex justify-between">
                 <h3 className="font-medium">{item.name}</h3>
@@ -202,7 +191,7 @@ export default function RestaurantPOS() {
 
   const handlePrintReceipt = () => {
     if (getItem?.data?.saleItemResponse.length > 0) {
-      const table = tableInfo?.find((t) => t.id === tableId);
+      const table = tableInfo?.find((t:{id:number}) => t.id === tableId);
 
       // Create receipt content
       const receiptContent = `
@@ -295,7 +284,7 @@ export default function RestaurantPOS() {
             <div className="border-b bg-white">
               <ScrollArea className="w-full">
                 <TabsList className="w-full justify-start rounded-none border-b-0 bg-transparent p-0">
-                  {categories.map((category) => (
+                  {categories.map((category:any) => (
                     <TabsTrigger
                       key={category}
                       value={category}
@@ -309,11 +298,11 @@ export default function RestaurantPOS() {
             </div>
 
             <div className="flex-1 overflow-auto p-4">
-              {categories.map((category) => (
+              {categories.map((category:any) => (
                 <TabsContent key={category} value={category} className="mt-0">
                   {data
-                    .filter((item) => item.category === category)
-                    .map((item) => renderMenuItem(item))}
+                    .filter((item:any) => item.category === category)
+                    .map((item:any) => renderMenuItem(item))}
                 </TabsContent>
               ))}
             </div>
