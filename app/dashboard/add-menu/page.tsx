@@ -32,16 +32,17 @@ import {
 } from "@/components/ui/dialog";
 import { Home, PlusCircle, Search, X } from "lucide-react";
 import Link from "next/link";
+import useGetAllCategories from "@/hooks/get-all-categories";
 
 // Category definitions
-const categories = [
-  { id: "all", name: "All Categories" },
-  { id: "appetizers", name: "Appetizers" },
-  { id: "mains", name: "Main Courses" },
-  { id: "sides", name: "Sides" },
-  { id: "desserts", name: "Desserts" },
-  { id: "drinks", name: "Drinks" },
-];
+// const categories = [
+//   { id: "all", name: "All Categories" },
+//   { id: "appetizers", name: "Appetizers" },
+//   { id: "mains", name: "Main Courses" },
+//   { id: "sides", name: "Sides" },
+//   { id: "desserts", name: "Desserts" },
+//   { id: "drinks", name: "Drinks" },
+// ];
 
 // Table type definitions
 const tableTypes = [
@@ -156,10 +157,15 @@ export default function SimplifiedMenu() {
   const [newPrice, setNewPrice] = useState("");
   const [newPriceTableType, setNewPriceTableType] = useState("standard");
 
+
+  const {categories}=useGetAllCategories();
+
+
+
   // Filter menu items based on selected category and search query
   const filteredItems = menuItems.filter((item) => {
     const matchesCategory =
-      selectedCategory === "all" || item.category === selectedCategory;
+      selectedCategory === "1" || item.category === selectedCategory;
     const matchesSearch = item.name
       .toLowerCase()
       .includes(searchQuery.toLowerCase());
@@ -284,8 +290,8 @@ export default function SimplifiedMenu() {
                     </SelectTrigger>
                     <SelectContent>
                       {categories
-                        .filter((cat) => cat.id !== "all")
-                        .map((category) => (
+                        ?.filter((cat:any) => cat.id !== "1")
+                        ?.map((category:any) => (
                           <SelectItem key={category.id} value={category.id}>
                             {category.name}
                           </SelectItem>
@@ -334,7 +340,7 @@ export default function SimplifiedMenu() {
                       <SelectValue placeholder="Select category" />
                     </SelectTrigger>
                     <SelectContent>
-                      {categories.map((category) => (
+                      {categories?.map((category:any) => (
                         <SelectItem key={category.id} value={category.id}>
                           {category.name}
                         </SelectItem>
