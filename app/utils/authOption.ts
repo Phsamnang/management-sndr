@@ -1,5 +1,5 @@
 import { authService } from "@/service/auth-service";
-import { AuthOptions, Session } from "next-auth";
+import { AuthOptions, Session, User } from "next-auth";
 import { JWT} from "next-auth/jwt";
 import CredentialsProvider from "next-auth/providers/credentials";
 
@@ -39,13 +39,18 @@ export const authOptions: AuthOptions = {
       return token;
     },
     async session({ session, token }: { session: Session, token: JWT }) {
-      // Pass the JWT token (including the Spring token) to the session
-      session.user = token.user;
-      session.accessToken = token.accessToken; // Expose the token in the session
+      //    const accessTokenData = JSON.parse(
+      //      atob(token.accessToken?.split(".")?.at(1)!)
+      //    );
+      //  session.user = accessTokenData;
+      session.user = token.user as User;
+      session.accessToken = token.accessToken as string; // Expose the token in the session
       return session;
     },
   },
 };
+
+
 
 
 declare module "next-auth" {
@@ -54,7 +59,25 @@ declare module "next-auth" {
    * a prop on the `SessionProvider` React Context
    */
   interface Session {
-    user: User;
+    user?:User;
+    accessToken?: string;
+  }
+
+  interface User {
+    id: string;
+    name: string;
+    accessToken: string;
+  }
+}
+
+declare module "next-auth/jwt" {
+  /** Returned by the `jwt` authorized and `getToken`, when using JWT sessions */
+  interface JWT {
+    user?: {
+      id?: string;
+      name?: string;
+      accessToken?: string;
+    };
     accessToken?: string;
   }
 }

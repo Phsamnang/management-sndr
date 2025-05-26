@@ -49,7 +49,7 @@ export default function TableSelection() {
       mutationFn: (id: number) => SaleService.createSale(id),
       onSuccess: () => {
         router.push(`/dashboard/menu?table=${selectedTable}`);
-        useClient.invalidateQueries(['table'])
+        useClient.invalidateQueries({queryKey:['table']})
       },
     });
 
@@ -153,7 +153,7 @@ export default function TableSelection() {
 
   // Get unique categories from table data
   const categories = Array.from(
-    new Set(tableInfo?.map((table) => table.category))
+    new Set(tableInfo?.map((table:any) => table.category))
   );
 
   const handleTableSelect = (tableId: number) => {
@@ -221,7 +221,7 @@ export default function TableSelection() {
       ]);
 
       setNewCategory("");
-      setShowAddCategory(false);
+      //setShowAddCategory(false);
     }
   };
 
@@ -238,15 +238,14 @@ export default function TableSelection() {
         </header>
         <div className="space-y-8">
           {/* Render tables by category */}
-          {categories?.map((category) => (
+          {categories?.map((category:any) => (
             <section key={category}>
               <h2 className="mb-4 text-xl font-semibold flex items-center gap-2">
                 {getCategoryIcon(category)} {category}
               </h2>
               <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
-                {tableInfo
-                  .filter((table) => table.category === category)
-                  .map((table) => (
+                {tableInfo.filter((table:any) => table.category === category)
+                  .map((table:any) => (
                     <Card
                       key={table.id}
                       className={`border-2 transition-all ${

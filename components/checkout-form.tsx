@@ -87,7 +87,7 @@ export function CheckoutForm({ total, onCancel }: CheckoutFormProps) {
             <RadioGroup
               defaultValue="delivery"
               className="flex space-x-4"
-              onValueChange={(value) => setOrderType(value as "delivery" | "dine-in")}
+              onValueChange={(value :any) => setOrderType(value as "delivery" | "dine-in")}
             >
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value="delivery" id="delivery" />
