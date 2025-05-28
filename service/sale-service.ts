@@ -28,9 +28,21 @@ const getSaleById=async(saleId:number)=>{
     return res.data;
 }
 
+const removeItem = async (saleItemId: number) => {
+  const res = await http.delete(ServiveID.SALE + `/${saleItemId}/item`);
+  return res.data;
+};
+
+const updateMenuPrice=async(payload:any)=>{
+      const res = await http.post(ServiveID.SALE+`/update`,payload);
+  return res.data;
+}
+
 export const SaleService={
     createSale,
     orderFood,
     getSale,
-    getSaleById
+    getSaleById,
+    removeItem,
+    updateMenuPrice
 }

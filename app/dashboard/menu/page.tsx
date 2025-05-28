@@ -12,6 +12,7 @@ import {
   Banknote,
   Wallet,
   ArrowLeft,
+  X,
 } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
@@ -22,6 +23,7 @@ import useGetAllTable from "@/hooks/get-all-table";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { menuService } from "@/service/menu-service";
 import { SaleService } from "@/service/sale-service";
+import { log } from "console";
 // Menu item type definition
 type MenuItem = {
   id: number;
@@ -45,6 +47,7 @@ export default function RestaurantPOS() {
   const [activeCategory, setActiveCategory] = useState<string>("");
   const { tableInfo } = useGetAllTable();
   const [qty,setQty]=useState(0)
+  const [saleId,setSaleId]=useState(0)
   
   const useClient = useQueryClient();
   const tableParam = searchParams.get("table");
@@ -74,14 +77,25 @@ export default function RestaurantPOS() {
   const orderFood=useMutation({
     mutationFn:(data)=>SaleService.orderFood(data),
     onSuccess:()=>{
-      useClient.invalidateQueries({queryKey:['menus']})
+      useClient.invalidateQueries({ queryKey: ["saleItems"] });
     }
-  })
+  })  
+
+    const removeItem = useMutation({
+      mutationFn: (id:number) => SaleService.removeItem(id),
+      onSuccess: () => {
+        useClient.invalidateQueries({ queryKey: ["saleItems"] });
+      },
+    });  
+
+  useEffect(()=>{
+    setSaleId(sales?.data?.id)
+  },[sales?.data])
 
 
     const getItem = useQuery({
-      queryFn: () => SaleService.getSaleById(sales?.data?.id),
-      queryKey: ["saleItems", tableParam],
+      queryFn: () => SaleService.getSaleById(saleId),
+      queryKey: ["saleItems",tableParam],
     });
 
   // Get unique categories from menu items
@@ -274,7 +288,7 @@ export default function RestaurantPOS() {
             <div className="border-b bg-white">
               <ScrollArea className="w-full">
                 <TabsList className="w-full justify-start rounded-none border-b-0 bg-transparent p-0">
-                  {categories.map((category:any) => (
+                  {categories.map((category: any) => (
                     <TabsTrigger
                       key={category}
                       value={category}
@@ -288,11 +302,11 @@ export default function RestaurantPOS() {
             </div>
 
             <div className="flex-1 overflow-auto p-4">
-              {categories.map((category:any) => (
+              {categories.map((category: any) => (
                 <TabsContent key={category} value={category} className="mt-0">
                   {data
-                    .filter((item:any) => item.category === category)
-                    .map((item:any) => renderMenuItem(item))}
+                    .filter((item: any) => item.category === category)
+                    .map((item: any) => renderMenuItem(item))}
                 </TabsContent>
               ))}
             </div>
@@ -327,7 +341,7 @@ export default function RestaurantPOS() {
               </div>
             ) : (
               <div className="space-y-4">
-                {getItem?.data?.saleItemResponse?.map((item:any) => (
+                {getItem?.data?.saleItemResponse?.map((item: any) => (
                   <div
                     key={item.id}
                     className="flex items-center justify-between"
@@ -336,10 +350,18 @@ export default function RestaurantPOS() {
                       <div className="flex items-center justify-between">
                         <span className="font-medium">{item.name}</span>
                         <span>{item.priceAtSale * item.quantity}</span>
+                        <Button
+                        onClick={()=>removeItem.mutate(item?.id)}
+                          variant="outline"
+                          size="icon"
+                          className="h-7 w-7 text-red-500 hover:text-red-700 hover:bg-red-50"
+                        >
+                          <X className="h-3 w-3" />
+                        </Button>
                       </div>
                       <div className="flex items-center gap-2 text-sm text-muted-foreground">
                         <span>
-                        {item.priceAtSale} × {item.quantity}
+                          {item.priceAtSale} × {item.quantity}
                         </span>
                       </div>
                     </div>
@@ -411,7 +433,7 @@ export default function RestaurantPOS() {
                   variant="outline"
                   className={`flex flex-col items-center gap-1 py-3 ${
                     paymentType === "digital"
-                      ? "bg-green-100 text-green-700 border-green-500"      
+                      ? "bg-green-100 text-green-700 border-green-500"
                       : "hover:bg-green-50 hover:text-green-600"
                   }`}
                   onClick={() => setPaymentType("digital")}

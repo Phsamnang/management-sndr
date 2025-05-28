@@ -10,6 +10,12 @@ const getAllTable=async()=>{
     return response.data;
 }
 
+const getAllTableTye = async () => {
+  const response = await http.get(ServiceId.TABLE+'/type');
+  return response.data;
+};
+
 export const tabelService={
-    getAllTable
+    getAllTable,
+    getAllTableTye
 }

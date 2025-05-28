@@ -19,8 +19,15 @@ const getAllMenus=async(tableId:number)=>{
 
 }
 
+const getAllMenusWithprices = async () => {
+  const rs = await http.get(ServiceId.MENU + `s`);
+
+  return rs.data;
+};
+
 
 export const menuService = {
     createMenu,
-    getAllMenus
+    getAllMenus,
+    getAllMenusWithprices
 }   

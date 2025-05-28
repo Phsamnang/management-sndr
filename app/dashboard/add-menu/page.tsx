@@ -33,6 +33,9 @@ import {
 import { Home, PlusCircle, Search, X } from "lucide-react";
 import Link from "next/link";
 import useGetAllCategories from "@/hooks/get-all-categories";
+import useGetAllTableType from "@/hooks/get-all-table-type";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { menuService } from "@/service/menu-service";
 
 // Category definitions
 // const categories = [
@@ -148,7 +151,7 @@ type MenuItem = {
 export default function SimplifiedMenu() {
   const [menuItems, setMenuItems] = useState<MenuItem[]>(initialMenuItems);
   const [selectedCategory, setSelectedCategory] = useState("all");
-  const [selectedTableType, setSelectedTableType] = useState("standard");
+  const [selectedTableType, setSelectedTableType] = useState("1");
   const [searchQuery, setSearchQuery] = useState("");
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [newItem, setNewItem] = useState({ name: "", category: "" });
@@ -159,6 +162,11 @@ export default function SimplifiedMenu() {
 
 
   const {categories}=useGetAllCategories();
+  const{tableType}=useGetAllTableType();
+  const{data}=useQuery({
+    queryKey:['menusPrice'],
+    queryFn:()=>menuService.getAllMenusWithprices()
+  })
 
 
 
@@ -198,7 +206,7 @@ export default function SimplifiedMenu() {
     const currentPrice =
       item.prices.find((p) => p.tableType === selectedTableType) ||
       item.prices[0];
-    setNewPrice(currentPrice.price);
+    setNewPrice(currentPrice?.price);
     setNewPriceTableType(currentPrice.tableType);
     setIsPriceDialogOpen(true);
   };
@@ -229,6 +237,7 @@ export default function SimplifiedMenu() {
 
   // Get price for the selected table type
   const getPriceForTableType = (item: MenuItem, tableType: string) => {
+     console.log(item,"item")
     const priceObj = item.prices.find((p) => p.tableType === tableType);
     return priceObj ? priceObj.price : "0.00";
   };
@@ -359,7 +368,7 @@ export default function SimplifiedMenu() {
                       <SelectValue placeholder="Select table type" />
                     </SelectTrigger>
                     <SelectContent>
-                      {tableTypes.map((type) => (
+                      {tableType?.map((type:any) => (
                         <SelectItem key={type.id} value={type.id}>
                           {type.name}
                         </SelectItem>
@@ -393,7 +402,7 @@ export default function SimplifiedMenu() {
                 <Badge variant="outline" className="font-normal">
                   Showing prices for:{" "}
                   <span className="font-medium ml-1">
-                    {tableTypes.find((t) => t.id === selectedTableType)?.name}
+                    {tableType?.find((t:any) => t.id === selectedTableType)?.name}
                   </span>
                 </Badge>
               </div>
@@ -410,14 +419,14 @@ export default function SimplifiedMenu() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {filteredItems.length === 0 ? (
+                    {data?.length === 0 ? (
                       <TableRow>
                         <TableCell colSpan={4} className="h-24 text-center">
                           No menu items found.
                         </TableCell>
                       </TableRow>
                     ) : (
-                      filteredItems.map((item) => (
+                      data?.map((item :any ) => (
                         <TableRow key={item.id}>
                           <TableCell className="font-medium">
                             {item.name}
@@ -437,7 +446,7 @@ export default function SimplifiedMenu() {
                                   : "bg-rose-100 text-rose-800 border-rose-200"
                               }
                             >
-                              {categories.find((c) => c.id === item.category)
+                              {categories.find((c :any) => c.id === item.category)
                                 ?.name || item.category}
                             </Badge>
                           </TableCell>
@@ -447,7 +456,7 @@ export default function SimplifiedMenu() {
                               className="px-2 font-mono"
                               onClick={() => openPriceDialog(item)}
                             >
-                              $
+                              
                               {Number.parseFloat(
                                 getPriceForTableType(item, selectedTableType)
                               ).toFixed(2)}
@@ -494,7 +503,7 @@ export default function SimplifiedMenu() {
                   <SelectValue placeholder="Select table type" />
                 </SelectTrigger>
                 <SelectContent>
-                  {tableTypes.map((type) => (
+                  {tableType?.map((type :any) => (
                     <SelectItem key={type.id} value={type.id}>
                       {type.name}
                     </SelectItem>
@@ -503,7 +512,7 @@ export default function SimplifiedMenu() {
               </Select>
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="price">Price ($)</Label>
+              <Label htmlFor="price">Price</Label>
               <Input
                 id="price"
                 type="number"
