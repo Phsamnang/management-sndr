@@ -34,8 +34,9 @@ import { Home, PlusCircle, Search, X } from "lucide-react";
 import Link from "next/link";
 import useGetAllCategories from "@/hooks/get-all-categories";
 import useGetAllTableType from "@/hooks/get-all-table-type";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { menuService } from "@/service/menu-service";
+import { all } from "axios";
 
 // Category definitions
 // const categories = [
@@ -154,18 +155,26 @@ export default function SimplifiedMenu() {
   const [selectedTableType, setSelectedTableType] = useState("1");
   const [searchQuery, setSearchQuery] = useState("");
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-  const [newItem, setNewItem] = useState({ name: "", category: "" });
+  const [newItem, setNewItem] = useState({ name: "", categoryId: "" });
   const [isPriceDialogOpen, setIsPriceDialogOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
   const [newPrice, setNewPrice] = useState("");
-  const [newPriceTableType, setNewPriceTableType] = useState("standard");
-
+  const [newPriceTableType, setNewPriceTableType] = useState("1");
+  const useClient = useQueryClient();
 
   const {categories}=useGetAllCategories();
   const{tableType}=useGetAllTableType();
   const{data}=useQuery({
     queryKey:['menusPrice'],
     queryFn:()=>menuService.getAllMenusWithprices()
+  })
+
+  const createMenu=useMutation({
+    mutationFn:(data:any)=>menuService.createMenu(data),
+    onSuccess:()=>{
+       setIsAddDialogOpen(false);
+       useClient.invalidateQueries({ queryKey: ["menusPrice"] });
+    }
   })
 
 
@@ -182,22 +191,18 @@ export default function SimplifiedMenu() {
 
   // Add new menu item
   const handleAddMenuItem = () => {
-    if (newItem.name && newItem.category) {
-      const newId = Math.max(...menuItems.map((item) => item.id), 0) + 1;
-      // Create a new menu item with default prices for all table types
+    if (newItem.name && newItem.categoryId) {
+
       const newMenuItemWithPrices = {
-        id: newId,
         ...newItem,
-        prices: tableTypes.map((type) => ({
-          tableType: type.id,
-          price: "0.00",
-        })),
       };
-      setMenuItems([...menuItems, newMenuItemWithPrices]);
-      setNewItem({ name: "", category: "" });
-      setIsAddDialogOpen(false);
+     
+      createMenu.mutate(newMenuItemWithPrices);
+     
     }
   };
+
+  console.log(selectedCategory,"sss")
 
   // Open price dialog for an item
   const openPriceDialog = (item: MenuItem) => {
@@ -207,7 +212,7 @@ export default function SimplifiedMenu() {
       item.prices.find((p) => p.tableType === selectedTableType) ||
       item.prices[0];
     setNewPrice(currentPrice?.price);
-    setNewPriceTableType(currentPrice.tableType);
+    setNewPriceTableType(currentPrice?.tableType);
     setIsPriceDialogOpen(true);
   };
 
@@ -237,10 +242,10 @@ export default function SimplifiedMenu() {
 
   // Get price for the selected table type
   const getPriceForTableType = (item: MenuItem, tableType: string) => {
-     console.log(item,"item")
     const priceObj = item.prices.find((p) => p.tableType === tableType);
     return priceObj ? priceObj.price : "0.00";
   };
+
 
   return (
     <div className="flex min-h-screen flex-col bg-gray-50">
@@ -288,9 +293,9 @@ export default function SimplifiedMenu() {
                 <div className="grid gap-2">
                   <Label htmlFor="category">Category</Label>
                   <Select
-                    value={newItem.category}
+                    value={newItem.categoryId}
                     onValueChange={(value) =>
-                      setNewItem({ ...newItem, category: value })
+                      setNewItem({ ...newItem, categoryId: value })
                     }
                     required
                   >
@@ -299,7 +304,7 @@ export default function SimplifiedMenu() {
                     </SelectTrigger>
                     <SelectContent>
                       {categories
-                        ?.filter((cat:any) => cat.id !== "1")
+                        ?.filter((cat:any) => cat.id !== "seafood")
                         ?.map((category:any) => (
                           <SelectItem key={category.id} value={category.id}>
                             {category.name}
@@ -350,7 +355,7 @@ export default function SimplifiedMenu() {
                     </SelectTrigger>
                     <SelectContent>
                       {categories?.map((category:any) => (
-                        <SelectItem key={category.id} value={category.id}>
+                        <SelectItem key={category.id} value={category.name}>
                           {category.name}
                         </SelectItem>
                       ))}
@@ -446,7 +451,7 @@ export default function SimplifiedMenu() {
                                   : "bg-rose-100 text-rose-800 border-rose-200"
                               }
                             >
-                              {categories.find((c :any) => c.id === item.category)
+                              {categories.find((c :any) => c.name === item.category)
                                 ?.name || item.category}
                             </Badge>
                           </TableCell>
