@@ -25,9 +25,15 @@ const getAllMenusWithprices = async () => {
   return rs.data;
 };
 
+const updatePrice=async(data:any)=>{
+    const rs=await http.post(ServiceId.MENU+"/update",data);
+    return rs.data;
+}
+
 
 export const menuService = {
     createMenu,
     getAllMenus,
-    getAllMenusWithprices
+    getAllMenusWithprices,
+    updatePrice
 }   

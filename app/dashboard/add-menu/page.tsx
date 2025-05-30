@@ -30,13 +30,15 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Home, PlusCircle, Search, X } from "lucide-react";
+import { FolderPlus, Home, PlusCircle, Search, X } from "lucide-react";
 import Link from "next/link";
 import useGetAllCategories from "@/hooks/get-all-categories";
 import useGetAllTableType from "@/hooks/get-all-table-type";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { menuService } from "@/service/menu-service";
 import { all } from "axios";
+import { categoryService } from "@/service/category-service";
+
 
 // Category definitions
 // const categories = [
@@ -151,7 +153,7 @@ type MenuItem = {
 
 export default function SimplifiedMenu() {
   const [menuItems, setMenuItems] = useState<MenuItem[]>(initialMenuItems);
-  const [selectedCategory, setSelectedCategory] = useState("all");
+  const [selectedCategory, setSelectedCategory] = useState("1");
   const [selectedTableType, setSelectedTableType] = useState("1");
   const [searchQuery, setSearchQuery] = useState("");
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
@@ -160,8 +162,9 @@ export default function SimplifiedMenu() {
   const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
   const [newPrice, setNewPrice] = useState("");
   const [newPriceTableType, setNewPriceTableType] = useState("1");
+   const [isCategoryDialogOpen, setIsCategoryDialogOpen] = useState(false);
+   const [newCategory, setNewCategory] = useState({ name: "" });
   const useClient = useQueryClient();
-
   const {categories}=useGetAllCategories();
   const{tableType}=useGetAllTableType();
   const{data}=useQuery({
@@ -173,14 +176,34 @@ export default function SimplifiedMenu() {
     mutationFn:(data:any)=>menuService.createMenu(data),
     onSuccess:()=>{
        setIsAddDialogOpen(false);
+       setNewItem({ name: "", categoryId: "" });
        useClient.invalidateQueries({ queryKey: ["menusPrice"] });
     }
   })
+   const createCategory = useMutation({
+     mutationFn: (data: any) => categoryService.createCategory(data),
+     onSuccess: () => {
+       setIsCategoryDialogOpen(false);
+       setNewCategory({name:''})
+       useClient.invalidateQueries({ queryKey: ["categories"] });
+     },
+   });
+
+      const updateMenuPrice = useMutation({
+        mutationFn: (data: any) => menuService.updatePrice(data),
+        onSuccess: () => {
+          setIsPriceDialogOpen(false);
+          useClient.invalidateQueries({ queryKey: ["menusPrice"] });
+        },
+      });
+
+
+
 
 
 
   // Filter menu items based on selected category and search query
-  const filteredItems = menuItems.filter((item) => {
+  const filteredItems = data?.filter((item :any) => {
     const matchesCategory =
       selectedCategory === "1" || item.category === selectedCategory;
     const matchesSearch = item.name
@@ -202,7 +225,14 @@ export default function SimplifiedMenu() {
     }
   };
 
-  console.log(selectedCategory,"sss")
+   const handleAddCategory = () => {
+     if (newCategory.name) {
+       const request = {
+         ...newCategory
+       };
+       createCategory.mutate(request);
+     }
+   };
 
   // Open price dialog for an item
   const openPriceDialog = (item: MenuItem) => {
@@ -219,19 +249,15 @@ export default function SimplifiedMenu() {
   // Update price for an item
   const updatePrice = () => {
     if (selectedItem && newPrice && newPriceTableType) {
-      setMenuItems(
-        menuItems.map((item) => {
-          if (item.id === selectedItem.id) {
-            // Update the price for the selected table type
-            const updatedPrices = item.prices.map((p) =>
-              p.tableType === newPriceTableType ? { ...p, price: newPrice } : p
-            );
-            return { ...item, prices: updatedPrices };
-          }
-          return item;
-        })
-      );
-      setIsPriceDialogOpen(false);
+      
+      const request = {
+        menuId: selectedItem.id,
+        price: newPrice,
+        tableTypeId:newPriceTableType
+      };
+
+      updateMenuPrice.mutate(request);
+      //setIsPriceDialogOpen(false);
     }
   };
 
@@ -242,7 +268,7 @@ export default function SimplifiedMenu() {
 
   // Get price for the selected table type
   const getPriceForTableType = (item: MenuItem, tableType: string) => {
-    const priceObj = item.prices.find((p) => p.tableType === tableType);
+    const priceObj = item?.prices.find((p) => p?.tableType === tableType);
     return priceObj ? priceObj.price : "0.00";
   };
 
@@ -263,75 +289,127 @@ export default function SimplifiedMenu() {
           <h1 className="text-2xl font-bold">
             Menu Management with Table Pricing
           </h1>
-          <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-            <DialogTrigger asChild>
-              <Button className="bg-green-600 hover:bg-green-700 text-white">
-                <PlusCircle className="mr-2 h-4 w-4" />
-                Add Menu Item
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-[425px]">
-              <DialogHeader>
-                <DialogTitle>Add New Menu Item</DialogTitle>
-                <DialogDescription>
-                  Enter the name and category for the new menu item.
-                </DialogDescription>
-              </DialogHeader>
-              <div className="grid gap-4 py-4">
-                <div className="grid gap-2">
-                  <Label htmlFor="name">Menu Item Name</Label>
-                  <Input
-                    id="name"
-                    value={newItem.name}
-                    onChange={(e) =>
-                      setNewItem({ ...newItem, name: e.target.value })
-                    }
-                    placeholder="Enter menu item name"
-                    required
-                  />
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="category">Category</Label>
-                  <Select
-                    value={newItem.categoryId}
-                    onValueChange={(value) =>
-                      setNewItem({ ...newItem, categoryId: value })
-                    }
-                    required
-                  >
-                    <SelectTrigger id="category">
-                      <SelectValue placeholder="Select category" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {categories
-                        ?.filter((cat:any) => cat.id !== "seafood")
-                        ?.map((category:any) => (
-                          <SelectItem key={category.id} value={category.id}>
-                            {category.name}
-                          </SelectItem>
-                        ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              <DialogFooter>
+          <div className="flex items-center gap-2">
+            <Dialog
+              open={isCategoryDialogOpen}
+              onOpenChange={setIsCategoryDialogOpen}
+            >
+              <DialogTrigger asChild>
                 <Button
-                  type="button"
                   variant="outline"
-                  onClick={() => setIsAddDialogOpen(false)}
+                  className="text-green-600 border-green-600 hover:bg-green-50"
                 >
-                  Cancel
+                  <FolderPlus className="mr-2 h-4 w-4" />
+                  Add Category
                 </Button>
-                <Button
-                  type="button"
-                  className="bg-green-600 hover:bg-green-700"
-                  onClick={handleAddMenuItem}
-                >
-                  Add Item
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-[425px]">
+                <DialogHeader>
+                  <DialogTitle>Add New Category</DialogTitle>
+                  <DialogDescription>
+                    Enter the name for the new menu category.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="grid gap-4 py-4">
+                  <div className="grid gap-2">
+                    <Label htmlFor="categoryName">Category Name</Label>
+                    <Input
+                      id="categoryName"
+                      value={newCategory.name}
+                      onChange={(e) => setNewCategory({ name: e.target.value })}
+                      placeholder="Enter category name"
+                      required
+                    />
+                  </div>
+                </div>
+                <DialogFooter>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setIsCategoryDialogOpen(false)}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    type="button"
+                    className="bg-green-600 hover:bg-green-700"
+                   onClick={handleAddCategory}
+                  >
+                    Add Category
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+
+            <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+              <DialogTrigger asChild>
+                <Button className="bg-green-600 hover:bg-green-700 text-white">
+                  <PlusCircle className="mr-2 h-4 w-4" />
+                  Add Menu Item
                 </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-[425px]">
+                <DialogHeader>
+                  <DialogTitle>Add New Menu Item</DialogTitle>
+                  <DialogDescription>
+                    Enter the name and category for the new menu item.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="grid gap-4 py-4">
+                  <div className="grid gap-2">
+                    <Label htmlFor="name">Menu Item Name</Label>
+                    <Input
+                      id="name"
+                      value={newItem.name}
+                      onChange={(e) =>
+                        setNewItem({ ...newItem, name: e.target.value })
+                      }
+                      placeholder="Enter menu item name"
+                      required
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="category">Category</Label>
+                    <Select
+                      value={newItem.categoryId}
+                      onValueChange={(value) =>
+                        setNewItem({ ...newItem, categoryId: value })
+                      }
+                      required
+                    >
+                      <SelectTrigger id="category">
+                        <SelectValue placeholder="Select category" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {categories?.filter((cat : any) => cat.id !== "all")
+                          .map((category:any) => (
+                            <SelectItem key={category.id} value={category.id}>
+                              {category.name}
+                            </SelectItem>
+                          ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <DialogFooter>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setIsAddDialogOpen(false)}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    type="button"
+                    className="bg-green-600 hover:bg-green-700"
+                    onClick={handleAddMenuItem}
+                  >
+                    Add Item
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          </div>
         </div>
       </header>
 
@@ -354,7 +432,7 @@ export default function SimplifiedMenu() {
                       <SelectValue placeholder="Select category" />
                     </SelectTrigger>
                     <SelectContent>
-                      {categories?.map((category:any) => (
+                      {categories?.map((category: any) => (
                         <SelectItem key={category.id} value={category.name}>
                           {category.name}
                         </SelectItem>
@@ -373,7 +451,7 @@ export default function SimplifiedMenu() {
                       <SelectValue placeholder="Select table type" />
                     </SelectTrigger>
                     <SelectContent>
-                      {tableType?.map((type:any) => (
+                      {tableType?.map((type: any) => (
                         <SelectItem key={type.id} value={type.id}>
                           {type.name}
                         </SelectItem>
@@ -407,7 +485,10 @@ export default function SimplifiedMenu() {
                 <Badge variant="outline" className="font-normal">
                   Showing prices for:{" "}
                   <span className="font-medium ml-1">
-                    {tableType?.find((t:any) => t.id === selectedTableType)?.name}
+                    {
+                      tableType?.find((t: any) => t.id === selectedTableType)
+                        ?.name
+                    }
                   </span>
                 </Badge>
               </div>
@@ -424,14 +505,14 @@ export default function SimplifiedMenu() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {data?.length === 0 ? (
+                    {filteredItems?.length === 0 ? (
                       <TableRow>
                         <TableCell colSpan={4} className="h-24 text-center">
                           No menu items found.
                         </TableCell>
                       </TableRow>
                     ) : (
-                      data?.map((item :any ) => (
+                      filteredItems?.map((item: any) => (
                         <TableRow key={item.id}>
                           <TableCell className="font-medium">
                             {item.name}
@@ -451,8 +532,9 @@ export default function SimplifiedMenu() {
                                   : "bg-rose-100 text-rose-800 border-rose-200"
                               }
                             >
-                              {categories.find((c :any) => c.name === item.category)
-                                ?.name || item.category}
+                              {categories.find(
+                                (c: any) => c.name === item.category
+                              )?.name || item.category}
                             </Badge>
                           </TableCell>
                           <TableCell>
@@ -461,7 +543,6 @@ export default function SimplifiedMenu() {
                               className="px-2 font-mono"
                               onClick={() => openPriceDialog(item)}
                             >
-                              
                               {Number.parseFloat(
                                 getPriceForTableType(item, selectedTableType)
                               ).toFixed(2)}
@@ -508,7 +589,7 @@ export default function SimplifiedMenu() {
                   <SelectValue placeholder="Select table type" />
                 </SelectTrigger>
                 <SelectContent>
-                  {tableType?.map((type :any) => (
+                  {tableType?.map((type: any) => (
                     <SelectItem key={type.id} value={type.id}>
                       {type.name}
                     </SelectItem>
