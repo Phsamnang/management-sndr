@@ -30,10 +30,16 @@ const updatePrice=async(data:any)=>{
     return rs.data;
 }
 
+const updateImage = async (menuId: any, image: any) => {
+  const rs = await http.post(ServiceId.MENU + `/${menuId}`, { image });
+  return rs.data;
+};
+
 
 export const menuService = {
     createMenu,
     getAllMenus,
     getAllMenusWithprices,
-    updatePrice
+    updatePrice,
+    updateImage
 }   

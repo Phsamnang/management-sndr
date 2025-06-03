@@ -30,7 +30,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { FolderPlus, Home, PlusCircle, Search, X } from "lucide-react";
+import { FolderPlus, Home, PlusCircle, Search, Upload, X } from "lucide-react";
 import Link from "next/link";
 import useGetAllCategories from "@/hooks/get-all-categories";
 import useGetAllTableType from "@/hooks/get-all-table-type";
@@ -164,6 +164,10 @@ export default function SimplifiedMenu() {
   const [newPriceTableType, setNewPriceTableType] = useState("1");
    const [isCategoryDialogOpen, setIsCategoryDialogOpen] = useState(false);
    const [newCategory, setNewCategory] = useState({ name: "" });
+    const [isImageDialogOpen, setIsImageDialogOpen] = useState(false);
+    const [selectedImageItem, setSelectedImageItem] = useState<MenuItem | null>(
+      null
+    );
   const useClient = useQueryClient();
   const {categories}=useGetAllCategories();
   const{tableType}=useGetAllTableType();
@@ -196,6 +200,15 @@ export default function SimplifiedMenu() {
           useClient.invalidateQueries({ queryKey: ["menusPrice"] });
         },
       });
+
+        // const updateMenuImage = useMutation({
+        //   mutationFn: (id:number,image: any) => menuService.updateImage(id,image),
+        //   onSuccess: () => {
+        //     setIsPriceDialogOpen(false);
+        //     useClient.invalidateQueries({ queryKey: ["menusPrice"] });
+        //   },
+        // });
+
 
 
 
@@ -273,6 +286,33 @@ export default function SimplifiedMenu() {
   };
 
 
+  const openImageDialog = (item: MenuItem) => {
+    setSelectedImageItem(item);
+    console.log(item);
+    setIsImageDialogOpen(true);
+  };
+
+  // Handle image upload
+  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file && selectedImageItem) {
+      // Create a URL for the uploaded file
+      const imageUrl = URL.createObjectURL(file);
+
+      // Update the menu item with the new image
+      setMenuItems(
+        menuItems.map((item) =>
+          item.id === selectedImageItem.id ? { ...item, image: imageUrl } : item
+        )
+      );
+
+      setIsImageDialogOpen(false);
+      setSelectedImageItem(null);
+    }
+  };
+
+
+
   return (
     <div className="flex min-h-screen flex-col bg-gray-50">
       <header className="border-b bg-white p-4">
@@ -333,7 +373,7 @@ export default function SimplifiedMenu() {
                   <Button
                     type="button"
                     className="bg-green-600 hover:bg-green-700"
-                   onClick={handleAddCategory}
+                    onClick={handleAddCategory}
                   >
                     Add Category
                   </Button>
@@ -381,8 +421,9 @@ export default function SimplifiedMenu() {
                         <SelectValue placeholder="Select category" />
                       </SelectTrigger>
                       <SelectContent>
-                        {categories?.filter((cat : any) => cat.id !== "all")
-                          .map((category:any) => (
+                        {categories
+                          ?.filter((cat: any) => cat.id !== "all")
+                          .map((category: any) => (
                             <SelectItem key={category.id} value={category.id}>
                               {category.name}
                             </SelectItem>
@@ -498,6 +539,7 @@ export default function SimplifiedMenu() {
                 <Table>
                   <TableHeader>
                     <TableRow>
+                      <TableHead>Image</TableHead>
                       <TableHead>Name</TableHead>
                       <TableHead>Category</TableHead>
                       <TableHead>Price</TableHead>
@@ -514,6 +556,26 @@ export default function SimplifiedMenu() {
                     ) : (
                       filteredItems?.map((item: any) => (
                         <TableRow key={item.id}>
+                          <TableCell>
+                            <div className="flex items-center gap-2">
+                              <div className="h-12 w-12 overflow-hidden rounded-md border">
+                                <img
+                                  src={item.image || "/placeholder.svg"}
+                                  alt={item.name}
+                                  className="h-full w-full object-cover"
+                                />
+                              </div>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="text-green-600 hover:text-green-700 hover:bg-green-50"
+                                onClick={() => openImageDialog(item)}
+                              >
+                                <Upload className="h-4 w-4 mr-1" />
+                                Browse
+                              </Button>
+                            </div>
+                          </TableCell>
                           <TableCell className="font-medium">
                             {item.name}
                           </TableCell>
@@ -625,6 +687,56 @@ export default function SimplifiedMenu() {
               onClick={updatePrice}
             >
               Update Price
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isImageDialogOpen} onOpenChange={setIsImageDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>
+              Upload Image for {selectedImageItem?.name}
+            </DialogTitle>
+            <DialogDescription>
+              Select an image file to upload for this menu item.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label htmlFor="imageUpload">Choose Image</Label>
+              <div className="flex items-center gap-4">
+                {selectedImageItem && (
+                  <div className="h-20 w-20 overflow-hidden rounded-md border">
+                    <img
+                      src={"/placeholder.svg"}
+                      alt={selectedImageItem.name}
+                      className="h-full w-full object-cover"
+                    />
+                  </div>
+                )}
+                <div className="flex-1">
+                  <Input
+                    id="imageUpload"
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageUpload}
+                    className="cursor-pointer"
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Supported formats: JPG, PNG, GIF (Max 5MB)
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setIsImageDialogOpen(false)}
+            >
+              Cancel
             </Button>
           </DialogFooter>
         </DialogContent>
