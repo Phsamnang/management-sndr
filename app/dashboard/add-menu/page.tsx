@@ -201,18 +201,13 @@ export default function SimplifiedMenu() {
         },
       });
 
-        // const updateMenuImage = useMutation({
-        //   mutationFn: (id:number,image: any) => menuService.updateImage(id,image),
-        //   onSuccess: () => {
-        //     setIsPriceDialogOpen(false);
-        //     useClient.invalidateQueries({ queryKey: ["menusPrice"] });
-        //   },
-        // });
-
-
-
-
-
+        const updateMenuImage = useMutation({
+          mutationFn:(data:any) => menuService.updateImage(data),
+          onSuccess: () => {
+            setIsImageDialogOpen(false);
+            useClient.invalidateQueries({ queryKey: ["menusPrice"] });
+          },
+        });
 
 
   // Filter menu items based on selected category and search query
@@ -296,17 +291,24 @@ export default function SimplifiedMenu() {
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file && selectedImageItem) {
+      alert("uploading image");
+      const request={
+        menuId:selectedImageItem.id,
+        image:file
+      }
+
+        updateMenuImage.mutate(request);
       // Create a URL for the uploaded file
-      const imageUrl = URL.createObjectURL(file);
+      // const imageUrl = URL.createObjectURL(file);
 
-      // Update the menu item with the new image
-      setMenuItems(
-        menuItems.map((item) =>
-          item.id === selectedImageItem.id ? { ...item, image: imageUrl } : item
-        )
-      );
+      // // Update the menu item with the new image
+      // setMenuItems(
+      //   menuItems.map((item) =>
+      //     item.id === selectedImageItem.id ? { ...item, image: imageUrl } : item
+      //   )
+      // );
 
-      setIsImageDialogOpen(false);
+    //  
       setSelectedImageItem(null);
     }
   };
@@ -720,7 +722,7 @@ export default function SimplifiedMenu() {
                     id="imageUpload"
                     type="file"
                     accept="image/*"
-                    onChange={handleImageUpload}
+                    onChange={(e)=>handleImageUpload(e)}
                     className="cursor-pointer"
                   />
                   <p className="text-xs text-muted-foreground mt-1">

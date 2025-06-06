@@ -30,8 +30,10 @@ const updatePrice=async(data:any)=>{
     return rs.data;
 }
 
-const updateImage = async (menuId: any, image: any) => {
-  const rs = await http.post(ServiceId.MENU + `/${menuId}`, { image });
+const updateImage = async (data:any) => {
+    const formData = new FormData();
+    formData.append("image", data.image);
+  const rs = await http.post(ServiceId.MENU + `/${data.menuId}/image`, formData);
   return rs.data;
 };
 
