@@ -291,11 +291,12 @@ export default function SimplifiedMenu() {
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file && selectedImageItem) {
-      alert("uploading image");
       const request={
         menuId:selectedImageItem.id,
         image:file
       }
+
+      console.log(request);
 
         updateMenuImage.mutate(request);
       // Create a URL for the uploaded file
@@ -562,8 +563,8 @@ export default function SimplifiedMenu() {
                             <div className="flex items-center gap-2">
                               <div className="h-12 w-12 overflow-hidden rounded-md border">
                                 <img
-                                  src={item.image || "/placeholder.svg"}
-                                  alt={item.name}
+                                  src={item?.img || "/placeholder.svg"}
+                                  alt={item?.name}
                                   className="h-full w-full object-cover"
                                 />
                               </div>
