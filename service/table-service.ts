@@ -2,20 +2,19 @@ import { http } from "@/app/utils/http";
 
 const ServiceId = {
   TABLE: "/table",
-};
+} as const;
 
-
-const getAllTable=async()=>{
-    const response = await http.get(ServiceId.TABLE);
-    return response.data;
-}
-
-const getAllTableTye = async () => {
-  const response = await http.get(ServiceId.TABLE+'/type');
+const getAllTables = async () => {
+  const response = await http.get(ServiceId.TABLE);
   return response.data;
 };
 
-export const tabelService={
-    getAllTable,
-    getAllTableTye
-}
+const getAllTableTypes = async () => {
+  const response = await http.get(`${ServiceId.TABLE}/type`);
+  return response.data;
+};
+
+export const tableService = {
+  getAllTables,
+  getAllTableTypes,
+};

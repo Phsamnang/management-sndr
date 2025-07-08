@@ -151,15 +151,17 @@ export default function RestaurantPOS() {
       <Card key={item.id} className="mb-3">
         <CardContent className="p-3">
           <div className="flex items-center gap-3">
-           
+            <img
+              src={item?.img || "/placeholder.svg"}
+              alt={item?.name}
+              className="h-20 w-20 rounded-md object-cover"
+            />
             <div className="flex-1">
               <div className="flex justify-between">
                 <h3 className="font-medium">{item.name}</h3>
                 <p className="font-semibold">${item.price}</p>
               </div>
-              <p className="text-sm text-muted-foreground line-clamp-2">
-              
-              </p>
+              <p className="text-sm text-muted-foreground line-clamp-2"></p>
               <div className="mt-2 flex items-center gap-2">
                 <div className="flex items-center gap-2">
                   <div className="w-16">
@@ -168,8 +170,7 @@ export default function RestaurantPOS() {
                       onChange={(e) => {
                         const value = Number.parseInt(e.target.value);
 
-                        setQty(value)
-                    
+                        setQty(value);
                       }}
                       className="h-8 text-center"
                     />
@@ -178,13 +179,12 @@ export default function RestaurantPOS() {
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => addToCart(item?.id,qty)}
+                      onClick={() => addToCart(item?.id, qty)}
                       className="bg-green-100 text-green-700 hover:bg-green-200 hover:text-green-800 border-green-300"
                     >
                       Add
                     </Button>
                   )}
-          
                 </div>
               </div>
             </div>
