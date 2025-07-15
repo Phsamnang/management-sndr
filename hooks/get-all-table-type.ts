@@ -1,9 +1,9 @@
-import { tabelService } from "@/service/table-service"
 import { useQuery } from "@tanstack/react-query"
+import { tableService } from "../service/table-service"
 
 const useGetAllTableType=()=>{
 const {data,isLoading}=useQuery({
-    queryFn:()=>tabelService.getAllTableTye(),
+    queryFn:()=>tableService.getAllTableTypes(),
     queryKey:['tablesType']
   })
   return {
