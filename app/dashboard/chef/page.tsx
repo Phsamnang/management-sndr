@@ -28,7 +28,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { ChefService } from "@/service/chef-service";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {io} from "socket.io-client";
 
 
@@ -56,6 +56,14 @@ const queryClient=useQueryClient()
   const foods=useQuery({
     queryKey:["chef-foods"],
     queryFn:()=>ChefService.getFoods()
+  })
+
+
+  const updateFoodStatus=useMutation({
+    mutationFn:(data:any)=>ChefService.updateFoodStatus(data),
+    onSuccess:()=>{
+      queryClient.invalidateQueries({queryKey:["chef-foods"]})
+    }
   })
 
 
@@ -307,6 +315,12 @@ const queryClient=useQueryClient()
                         <Button
                           size="sm"
                           className="bg-green-600 hover:bg-green-700 text-white"
+                          onClick={() =>
+                            updateFoodStatus.mutate({
+                              orderId: item.id,
+                              status: "processing",
+                            })
+                          }
                         >
                           <Play className="h-3 w-3 mr-1" />
                           Start
@@ -317,6 +331,12 @@ const queryClient=useQueryClient()
                         <Button
                           size="sm"
                           className="bg-blue-600 hover:bg-blue-700 text-white"
+                          onClick={() =>
+                            updateFoodStatus.mutate({
+                              orderId: item.id,
+                              status: "shipped",
+                            })
+                          }
                         >
                           <CheckCircle className="h-3 w-3 mr-1" />
                           Complete
