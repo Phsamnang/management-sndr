@@ -27,208 +27,8 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { io } from "socket.io-client";
-
-// Sample completed orders from chef ready for table delivery
-const initialTableDeliveryOrders = [
-  {
-    id: "table-delivery-1",
-    orderNumber: "ORD-001",
-    table: {
-      number: "Table 5",
-      section: "Main Dining",
-      seats: 4,
-      server: "Alice Johnson",
-    },
-    customer: {
-      name: "John Smith",
-      partySize: 2,
-    },
-    items: [
-      {
-        name: "Classic Burger",
-        quantity: 2,
-        notes: "One without onions",
-        temperature: "Medium",
-      },
-      { name: "French Fries", quantity: 2, notes: "Extra crispy" },
-      { name: "Coca Cola", quantity: 2, notes: "No ice" },
-    ],
-    completedTime: new Date(Date.now() - 5 * 60000).toISOString(),
-    orderTime: new Date(Date.now() - 25 * 60000).toISOString(),
-    total: 33.96,
-    priority: "urgent",
-    status: "ready_for_delivery",
-    progress: 0,
-    specialInstructions: "Customer has food allergy - nuts",
-    estimatedDeliveryTime: 3, // minutes to deliver to table
-  },
-  {
-    id: "table-delivery-2",
-    orderNumber: "ORD-002",
-    table: {
-      number: "Table 12",
-      section: "Patio",
-      seats: 6,
-      server: "Bob Wilson",
-    },
-    customer: {
-      name: "Sarah Johnson",
-      partySize: 4,
-    },
-    items: [
-      {
-        name: "Margherita Pizza",
-        quantity: 1,
-        notes: "Extra cheese",
-        temperature: "Hot",
-      },
-      { name: "Garlic Bread", quantity: 1, notes: "Well toasted" },
-      { name: "House Salad", quantity: 2, notes: "Dressing on side" },
-    ],
-    completedTime: new Date(Date.now() - 8 * 60000).toISOString(),
-    orderTime: new Date(Date.now() - 35 * 60000).toISOString(),
-    total: 27.97,
-    priority: "high",
-    status: "picked_up",
-    progress: 45,
-    specialInstructions: "Birthday celebration - bring candles",
-    estimatedDeliveryTime: 2,
-  },
-  {
-    id: "table-delivery-3",
-    orderNumber: "ORD-003",
-    table: {
-      number: "Table 8",
-      section: "VIP",
-      seats: 2,
-      server: "Carol Davis",
-    },
-    customer: {
-      name: "Mike Wilson",
-      partySize: 2,
-    },
-    items: [
-      {
-        name: "Grilled Salmon",
-        quantity: 1,
-        notes: "Medium well",
-        temperature: "Hot",
-      },
-      { name: "Steamed Rice", quantity: 1, notes: "Extra portion" },
-      { name: "Asparagus", quantity: 1, notes: "Light seasoning" },
-    ],
-    completedTime: new Date(Date.now() - 12 * 60000).toISOString(),
-    orderTime: new Date(Date.now() - 45 * 60000).toISOString(),
-    total: 29.96,
-    priority: "normal",
-    status: "out_for_delivery",
-    progress: 80,
-    specialInstructions: "",
-    estimatedDeliveryTime: 1,
-  },
-  {
-    id: "table-delivery-4",
-    orderNumber: "ORD-004",
-    table: {
-      number: "Table 15",
-      section: "Bar Area",
-      seats: 4,
-      server: "David Brown",
-    },
-    customer: {
-      name: "Emily Davis",
-      partySize: 3,
-    },
-    items: [
-      {
-        name: "Chicken Wings",
-        quantity: 12,
-        notes: "Extra spicy",
-        temperature: "Hot",
-      },
-      { name: "Onion Rings", quantity: 1, notes: "Golden brown" },
-      { name: "Blue Cheese Dip", quantity: 2, notes: "Extra portion" },
-    ],
-    completedTime: new Date(Date.now() - 3 * 60000).toISOString(),
-    orderTime: new Date(Date.now() - 20 * 60000).toISOString(),
-    total: 26.97,
-    priority: "normal",
-    status: "ready_for_delivery",
-    progress: 0,
-    specialInstructions: "Customer requested extra napkins",
-    estimatedDeliveryTime: 2,
-  },
-  {
-    id: "table-delivery-5",
-    orderNumber: "ORD-005",
-    table: {
-      number: "Table 3",
-      section: "Window Side",
-      seats: 2,
-      server: "Eva Martinez",
-    },
-    customer: {
-      name: "David Brown",
-      partySize: 2,
-    },
-    items: [
-      {
-        name: "Caesar Salad",
-        quantity: 1,
-        notes: "No croutons",
-        temperature: "Cold",
-      },
-      {
-        name: "Chocolate Cake",
-        quantity: 1,
-        notes: "Birthday cake - add candle",
-        temperature: "Room temp",
-      },
-      { name: "Coffee", quantity: 2, notes: "One decaf" },
-    ],
-    completedTime: new Date(Date.now() - 6 * 60000).toISOString(),
-    orderTime: new Date(Date.now() - 30 * 60000).toISOString(),
-    total: 26.96,
-    priority: "urgent",
-    status: "ready_for_delivery",
-    progress: 0,
-    specialInstructions: "Anniversary dinner - handle with care",
-    estimatedDeliveryTime: 2,
-  },
-  {
-    id: "table-delivery-6",
-    orderNumber: "ORD-006",
-    table: {
-      number: "Table 9",
-      section: "Main Dining",
-      seats: 8,
-      server: "Frank Wilson",
-    },
-    customer: {
-      name: "Lisa Wang",
-      partySize: 6,
-    },
-    items: [
-      {
-        name: "Fish Tacos",
-        quantity: 3,
-        notes: "Extra lime",
-        temperature: "Hot",
-      },
-      { name: "Guacamole", quantity: 2, notes: "Fresh made" },
-      { name: "Tortilla Chips", quantity: 1, notes: "Warm" },
-    ],
-    completedTime: new Date(Date.now() - 1 * 60000).toISOString(),
-    orderTime: new Date(Date.now() - 18 * 60000).toISOString(),
-    total: 24.98,
-    priority: "high",
-    status: "picked_up",
-    progress: 25,
-    specialInstructions: "Large party - serve together",
-    estimatedDeliveryTime: 3,
-  },
-];
-
+import { deliveryService } from "@/service/delivery-service";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 type TableDeliveryOrder = {
   id: string;
   orderNumber: string;
@@ -259,10 +59,15 @@ type TableDeliveryOrder = {
 };
 
 export default function TableDeliveryPage() {
-  const [deliveryOrders, setDeliveryOrders] = useState<TableDeliveryOrder[]>(
-    initialTableDeliveryOrders
-  );
 
+
+
+  const { data: deliveryFoods, isLoading } = useQuery({
+    queryKey: ["deliveryFoods"],
+    queryFn: deliveryService.getDeliveryFoods,
+  });
+
+  const queryClient = useQueryClient();
 
      useEffect(() => {
        // Connect to backend WebSocket server
@@ -272,85 +77,23 @@ export default function TableDeliveryPage() {
          console.log("Connected to WebSocket server");
        });
        socket.on("foodDelivery", (data) => {
-         alert(data.message);
+         queryClient.invalidateQueries({ queryKey: ["deliveryFoods"] });
        });
        return () => {
          socket.disconnect();
        };
      }, []);
 
-  const startPickup = (orderId: string) => {
-    setDeliveryOrders(
-      deliveryOrders.map((order) =>
-        order.id === orderId
-          ? {
-              ...order,
-              status: "picked_up" as const,
-              progress: 0,
-            }
-          : order
-      )
-    );
-  };
 
-  // Start delivery to table
-  const startDelivery = (orderId: string) => {
-    setDeliveryOrders(
-      deliveryOrders.map((order) =>
-        order.id === orderId
-          ? {
-              ...order,
-              status: "out_for_delivery" as const,
-              progress: 0,
-            }
-          : order
-      )
-    );
-  };
 
-  // Complete delivery to table
-  const completeDelivery = (orderId: string) => {
-    setDeliveryOrders(
-      deliveryOrders.map((order) =>
-        order.id === orderId
-          ? {
-              ...order,
-              status: "delivered" as const,
-              progress: 100,
-            }
-          : order
-      )
-    );
-  };
 
-  // Auto-progress delivery items
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setDeliveryOrders((prevOrders) =>
-        prevOrders.map((order) => {
-          if (order.status === "picked_up" && order.progress < 99) {
-            return {
-              ...order,
-              progress: Math.min(order.progress + 3, 99),
-            };
-          }
-          if (order.status === "out_for_delivery" && order.progress < 99) {
-            return {
-              ...order,
-              progress: Math.min(order.progress + 5, 99),
-            };
-          }
-          return order;
-        })
-      );
-    }, 1000);
+  if(isLoading) return <div>Loading...</div>
 
-    return () => clearInterval(interval);
-  }, []);
+
 
   // Filter orders - only show non-delivered orders
-  const filteredOrders = deliveryOrders.filter(
-    (order) => order.status !== "delivered"
+  const filteredOrders = deliveryFoods?.filter(
+    (order:any) => order.status !== "shiped"
   );
 
   // Calculate wait time since completion
@@ -410,15 +153,6 @@ export default function TableDeliveryPage() {
     }
   };
 
-  const readyCount = deliveryOrders.filter(
-    (order) => order.status === "ready_for_delivery"
-  ).length;
-  const pickedUpCount = deliveryOrders.filter(
-    (order) => order.status === "picked_up"
-  ).length;
-  const outForDeliveryCount = deliveryOrders.filter(
-    (order) => order.status === "out_for_delivery"
-  ).length;
 
   return (
     <div className="flex min-h-screen flex-col bg-gradient-to-br from-green-50 to-gray-100">
@@ -462,15 +196,12 @@ export default function TableDeliveryPage() {
               <TableHeader>
                 <TableRow className="bg-gray-50">
                   <TableHead className="font-semibold w-48">
-                    Order Details
+                    Order Number
                   </TableHead>
-                  <TableHead className="font-semibold w-64">
-                    Table & Customer
-                  </TableHead>
+                  <TableHead className="font-semibold w-64">Table</TableHead>
                   <TableHead className="font-semibold w-48">
                     Food Items
                   </TableHead>
-                  <TableHead className="font-semibold w-24">Priority</TableHead>
                   <TableHead className="font-semibold w-32">Status</TableHead>
                   <TableHead className="font-semibold w-32">Progress</TableHead>
                   <TableHead className="font-semibold w-32">Time</TableHead>
@@ -486,30 +217,19 @@ export default function TableDeliveryPage() {
           <div className="overflow-auto h-[calc(100%-60px)]">
             <Table>
               <TableBody>
-                {filteredOrders.map((order) => (
+                {filteredOrders.map((order: any) => (
                   <TableRow
                     key={order.id}
                     className={`transition-colors ${getRowBackground(
                       order.priority,
-                      order.status
+                      order.delivery_sts
                     )}`}
                   >
                     {/* Order Details */}
                     <TableCell className="font-medium w-48">
                       <div className="space-y-1">
                         <div className="font-semibold text-gray-900">
-                          {order.orderNumber}
-                        </div>
-                        <div className="text-sm text-gray-600">
-                          Server: {order.table.server}
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Badge variant="outline" className="text-xs">
-                            ${order.total}
-                          </Badge>
-                          <Badge variant="outline" className="text-xs">
-                            {order.estimatedDeliveryTime}min
-                          </Badge>
+                          {order.id}
                         </div>
                       </div>
                     </TableCell>
@@ -519,16 +239,17 @@ export default function TableDeliveryPage() {
                       <div className="space-y-1">
                         <div className="font-medium text-gray-900 flex items-center">
                           <MapPin className="h-3 w-3 mr-1" />
-                          {order.table.number}
+                          {order.table_name}
                         </div>
-                        <Badge
+                      </div>
+                      {/* <Badge
                           className={`text-xs ${getSectionColor(
                             order.table.section
                           )}`}
                         >
                           {order.table.section}
-                        </Badge>
-                        <div className="text-sm text-gray-600 flex items-center">
+                        </Badge> */}
+                      {/* <div className="text-sm text-gray-600 flex items-center">
                           <User className="h-3 w-3 mr-1" />
                           {order.customer.name}
                         </div>
@@ -543,68 +264,45 @@ export default function TableDeliveryPage() {
                             {order.specialInstructions}
                           </div>
                         )}
-                      </div>
+                      </div> */}
                     </TableCell>
 
                     {/* Food Items */}
                     <TableCell className="w-48">
                       <div className="space-y-1">
-                        {order.items.map((item, index) => (
-                          <div key={index} className="text-sm">
-                            <div className="font-medium">
-                              {item.quantity}x {item.name}
-                            </div>
-                            <div className="text-xs text-gray-500 flex items-center gap-2">
+                        <div key={order.id} className="text-sm">
+                          <div className="font-medium">
+                            {order.name} x {order.qty}
+                          </div>
+                          {/* <div className="text-xs text-gray-500 flex items-center gap-2">
                               <span className="italic">{item.notes}</span>
                               <Badge variant="outline" className="text-xs">
-                                {item.temperature}
+                           
                               </Badge>
-                            </div>
-                          </div>
-                        ))}
+                            </div> */}
+                        </div>
                       </div>
                     </TableCell>
 
                     {/* Priority */}
                     <TableCell className="w-24">
-                      <div className={getPriorityColor(order.priority)}>
-                        {order.priority.charAt(0).toUpperCase() +
-                          order.priority.slice(1)}
-                      </div>
+                      <div className={getPriorityColor(order.priority)}></div>
                     </TableCell>
 
                     {/* Status */}
                     <TableCell className="w-32">
-                      <Badge className={`${getStatusColor(order.status)}`}>
-                        {order.status
-                          .replace("_", " ")
-                          .charAt(0)
-                          .toUpperCase() +
-                          order.status.replace("_", " ").slice(1)}
-                      </Badge>
+                      <Badge
+                        className={`${getStatusColor(order.delivery_sts)}`}
+                      ></Badge>
                     </TableCell>
 
                     {/* Progress */}
                     <TableCell className="w-32">
-                      {order.status === "picked_up" ||
-                      order.status === "out_for_delivery" ? (
-                        <div className="space-y-1">
-                          <Progress value={order.progress} className="h-2" />
-                          <div className="text-xs text-center text-muted-foreground">
-                            {Math.round(order.progress)}%
-                          </div>
-                        </div>
-                      ) : order.status === "delivered" ? (
-                        <div className="text-center">
-                          <CheckCircle className="h-5 w-5 text-green-600 mx-auto" />
-                          <div className="text-xs text-green-600">Served</div>
-                        </div>
-                      ) : (
                         <div className="text-center text-gray-400">
                           <Package className="h-5 w-5 mx-auto" />
                           <div className="text-xs">Ready</div>
                         </div>
-                      )}
+                
                     </TableCell>
 
                     {/* Time */}
@@ -612,7 +310,7 @@ export default function TableDeliveryPage() {
                       <div className="space-y-1">
                         <div className="text-sm font-medium">
                           <Clock className="h-3 w-3 inline mr-1" />
-                          {getWaitTime(order.completedTime)}m ago
+                          {getWaitTime(order.start_time)}m ago
                         </div>
                         <div className="text-xs text-muted-foreground">
                           <Timer className="h-3 w-3 inline mr-1" />
@@ -624,18 +322,18 @@ export default function TableDeliveryPage() {
                     {/* Actions */}
                     <TableCell className="text-center w-40">
                       <div className="flex gap-1">
-                        {order.status === "ready_for_delivery" && (
+                        {order.delivery_sts === "shipped" && (
                           <Button
                             size="sm"
                             className="bg-green-600 hover:bg-green-700 text-white"
-                            onClick={() => startPickup(order.id)}
+                          
                           >
                             <Play className="h-3 w-3 mr-1" />
                             Pickup
                           </Button>
                         )}
 
-                        {order.status === "picked_up" && (
+                        {/* {order.status === "picked_up" && (
                           <Button
                             size="sm"
                             className="bg-blue-600 hover:bg-blue-700 text-white"
@@ -662,7 +360,7 @@ export default function TableDeliveryPage() {
                             <CheckCircle className="h-3 w-3 mr-1" />
                             Served
                           </Badge>
-                        )}
+                        )} */}
                       </div>
                     </TableCell>
                   </TableRow>
@@ -687,7 +385,7 @@ export default function TableDeliveryPage() {
       {/* Fixed Footer */}
       <footer className="sticky bottom-0 z-50 border-t bg-white/95 backdrop-blur-md p-4 shadow-sm">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-6 text-sm text-muted-foreground">
+          {/* <div className="flex items-center gap-6 text-sm text-muted-foreground">
             <div className="flex items-center gap-2">
               <div className="h-3 w-3 rounded-full bg-blue-500"></div>
               <span>Ready: {readyCount}</span>
@@ -700,7 +398,7 @@ export default function TableDeliveryPage() {
               <div className="h-3 w-3 rounded-full bg-purple-500"></div>
               <span>Serving: {outForDeliveryCount}</span>
             </div>
-          </div>
+          </div> */}
 
           <div className="text-sm text-muted-foreground">
             <span className="font-medium">Active Table Service:</span>{" "}

@@ -43,7 +43,13 @@ export default function page() {
   }) 
   if(isLoading) return <>....</>
   return (
-    <div className='px-9'>
+
+      <div className="space-y-6">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <h1 className="text-2xl lg:text-3xl font-bold">Staff</h1>
+      </div>
+  
       <EmployeeTablee data={data} columns={columns} />
     </div>
   )
