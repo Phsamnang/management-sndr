@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -52,6 +52,11 @@ export default function TableSelection() {
         useClient.invalidateQueries({queryKey:['table']})
       },
     });
+
+
+  useEffect(()=>{
+    useClient.invalidateQueries({queryKey:['table']})
+  },[])
 
   // Initial table data with dynamic categories
   const [tableData, setTableData] = useState<Table[]>([

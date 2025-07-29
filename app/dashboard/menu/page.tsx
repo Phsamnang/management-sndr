@@ -91,8 +91,7 @@ export default function RestaurantPOS() {
     const payment=useMutation({
       mutationFn:(data:any)=>SaleService.salePayment(data),
       onSuccess:()=>{
-        useClient.invalidateQueries({ queryKey: ["table"] });
-       // router.push("/")
+        router.push("/")
       }
     });
 
