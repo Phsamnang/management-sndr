@@ -88,6 +88,14 @@ export default function RestaurantPOS() {
       },
     });  
 
+    const payment=useMutation({
+      mutationFn:(data:any)=>SaleService.salePayment(data),
+      onSuccess:()=>{
+        useClient.invalidateQueries({ queryKey: ["table"] });
+       // router.push("/")
+      }
+    });
+
   useEffect(()=>{
     setSaleId(sales?.data?.id)
   },[sales?.data])
@@ -351,7 +359,7 @@ export default function RestaurantPOS() {
                         <span className="font-medium">{item.name}</span>
                         <span>{item.priceAtSale * item.quantity}</span>
                         <Button
-                        onClick={()=>removeItem.mutate(item?.id)}
+                          onClick={() => removeItem.mutate(item?.id)}
                           variant="outline"
                           size="icon"
                           className="h-7 w-7 text-red-500 hover:text-red-700 hover:bg-red-50"
@@ -411,7 +419,7 @@ export default function RestaurantPOS() {
                       : "hover:bg-green-50 hover:text-green-600"
                   }`}
                   onClick={() => setPaymentType("cash")}
-                  disabled={cart.length === 0}
+                  disabled={getItem?.data?.saleItemResponse.length === 0}
                 >
                   <Banknote className="h-5 w-5" />
                   <span className="text-xs">Cash</span>
@@ -424,7 +432,7 @@ export default function RestaurantPOS() {
                       : "hover:bg-green-50 hover:text-green-600"
                   }`}
                   onClick={() => setPaymentType("credit")}
-                  disabled={cart.length === 0}
+                  disabled={getItem?.data?.saleItemResponse.length === 0}
                 >
                   <CreditCard className="h-5 w-5" />
                   <span className="text-xs">Credit</span>
@@ -437,7 +445,7 @@ export default function RestaurantPOS() {
                       : "hover:bg-green-50 hover:text-green-600"
                   }`}
                   onClick={() => setPaymentType("digital")}
-                  disabled={cart.length === 0}
+                  disabled={getItem?.data?.saleItemResponse.length === 0}
                 >
                   <Wallet className="h-5 w-5" />
                   <span className="text-xs">Digital</span>
@@ -457,7 +465,17 @@ export default function RestaurantPOS() {
               <Button
                 className="bg-green-600 hover:bg-green-700 text-white"
                 size="lg"
-                disabled={cart.length === 0 || !paymentType}
+                disabled={
+                  getItem?.data?.saleItemResponse.length === 0 || !paymentType
+                }
+
+                onClick={()=>{
+                  payment.mutate({
+                    saleId: saleId,
+                    paymentMethod:paymentType
+                  });
+                }}
+
               >
                 Checkout
               </Button>

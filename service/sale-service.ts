@@ -2,7 +2,8 @@ import { http } from "@/app/utils/http"
 
 const ServiveID={
     SALE:'/sale',
-    ORDER:'/order'
+    ORDER:'/order',
+    PAYMENT:'/sale/payment'
 }
 
 const createSale=async(tableId:number)=>{
@@ -38,11 +39,17 @@ const updateMenuPrice=async(payload:any)=>{
   return res.data;
 }
 
+const salePayment=async(data:any)=>{
+    const res=await http.post(ServiveID.PAYMENT,data);
+    return res.data;
+}
+
 export const SaleService={
     createSale,
     orderFood,
     getSale,
     getSaleById,
     removeItem,
-    updateMenuPrice
+    updateMenuPrice,
+    salePayment
 }
