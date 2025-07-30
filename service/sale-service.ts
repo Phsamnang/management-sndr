@@ -44,6 +44,16 @@ const salePayment=async(data:any)=>{
     return res.data;
 }
 
+const getSaleByDate=async(startDate:any,endDate:any)=>{
+    const res=await http.get(ServiveID.SALE,{
+        params:{
+           startDate:startDate,
+           endDate:endDate
+        }
+    })
+    return res.data;
+}
+
 export const SaleService={
     createSale,
     orderFood,
@@ -51,5 +61,6 @@ export const SaleService={
     getSaleById,
     removeItem,
     updateMenuPrice,
-    salePayment
+    salePayment,
+    getSaleByDate
 }

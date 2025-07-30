@@ -17,13 +17,6 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
   Dialog,
   DialogContent,
   DialogHeader,
@@ -36,7 +29,9 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Separator } from "@/components/ui/separator";
-
+import { Label } from "@/components/ui/label";
+import { useQuery } from "@tanstack/react-query";
+import { SaleService } from "@/service/sale-service";
 
 interface OrderDetails extends Transaction {
   customerName?: string;
@@ -70,6 +65,18 @@ export default function OrdersPage() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [selectedOrder, setSelectedOrder] = useState<OrderDetails | null>(null);
   const [showOrderDetails, setShowOrderDetails] = useState(false);
+   const [dateFilter, setDateFilter] = useState({
+      startDate: new Date().toISOString().split("T")[0], // Today's date
+      endDate: new Date().toISOString().split("T")[0], // Today's date
+    });
+
+
+    const saleList=useQuery({
+      queryFn:()=>SaleService.getSaleByDate(dateFilter.startDate,dateFilter.endDate),
+      queryKey:['saleList',dateFilter]
+    })
+
+    console.log(saleList)
 
   useEffect(() => {
     loadOrders();
@@ -216,7 +223,7 @@ export default function OrdersPage() {
             </div>
             <p className="text-2xl font-bold mt-1">
               {
-                orders.filter((order:any) => {
+                orders.filter((order: any) => {
                   const today = new Date().toDateString();
                   return new Date(order.start_time).toDateString() === today;
                 }).length
@@ -229,30 +236,36 @@ export default function OrdersPage() {
       {/* Filters */}
       <Card>
         <CardContent className="p-4">
-          <div className="flex flex-col sm:flex-row gap-4">
-            <div className="relative flex-1">
-              <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+          <div className="flex flex-col sm:flex-row gap-4 items-end">
+            <div className="flex-1">
+              <Label htmlFor="startDate" className="text-sm font-medium">
+                Start Date
+              </Label>
               <Input
-                placeholder="Search orders..."
-                className="pl-8"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                id="startDate"
+                type="date"
+                value={dateFilter.startDate}
+                onChange={(e) =>
+                  setDateFilter({ ...dateFilter, startDate: e.target.value })
+                }
+                className="mt-1"
               />
             </div>
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-full sm:w-48">
-                <Filter className="h-4 w-4 mr-2" />
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Status</SelectItem>
-                {orderStatuses.map((status) => (
-                  <SelectItem key={status.value} value={status.value}>
-                    {status.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <div className="flex-1">
+              <Label htmlFor="endDate" className="text-sm font-medium">
+                End Date
+              </Label>
+              <Input
+                id="endDate"
+                type="date"
+                value={dateFilter.endDate}
+                onChange={(e) =>
+                  setDateFilter({ ...dateFilter, endDate: e.target.value })
+                }
+                className="mt-1"
+              />
+            </div>
+          
           </div>
         </CardContent>
       </Card>
