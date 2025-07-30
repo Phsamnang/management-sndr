@@ -11,32 +11,19 @@ import {
   DollarSign,
   Package,
   MoreHorizontal,
+  CaseUpper,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+
 import { Separator } from "@/components/ui/separator";
 import { Label } from "@/components/ui/label";
 import { useQuery } from "@tanstack/react-query";
 import { SaleService } from "@/service/sale-service";
+import { formatRiels } from "@/lib/utils";
 
-interface OrderDetails extends Transaction {
-  customerName?: string;
-  customerEmail?: string;
-}
+
 
 const orderStatuses = [
   {
@@ -59,11 +46,7 @@ const orderStatuses = [
 ];
 
 export default function OrdersPage() {
-  const [orders, setOrders] = useState<OrderDetails[]>([]);
-  const [filteredOrders, setFilteredOrders] = useState<OrderDetails[]>([]);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState("all");
-  const [selectedOrder, setSelectedOrder] = useState<OrderDetails | null>(null);
+
   const [showOrderDetails, setShowOrderDetails] = useState(false);
    const [dateFilter, setDateFilter] = useState({
       startDate: new Date().toISOString().split("T")[0], // Today's date
@@ -76,61 +59,10 @@ export default function OrdersPage() {
       queryKey:['saleList',dateFilter]
     })
 
-    console.log(saleList)
 
-  useEffect(() => {
-    loadOrders();
-  }, []);
+    if(saleList.isLoading) return <>Loading.....</>
 
-  useEffect(() => {
-    filterOrders();
-  }, [orders, searchQuery, statusFilter]);
 
-  const loadOrders = async () => {
-    const transactions = await db.getTransactions();
-    const customers = await db.getCustomers();
-
-    const ordersWithCustomerInfo: OrderDetails[] = transactions.map(
-      (transaction) => {
-        const customer = customers.find((c) => c.id === transaction.customerId);
-        return {
-          ...transaction,
-          customerName: customer?.name || "Guest",
-          customerEmail: customer?.email || "",
-        };
-      }
-    );
-
-    setOrders(ordersWithCustomerInfo.reverse()); // Most recent first
-  };
-
-  const filterOrders = () => {
-    let filtered = orders;
-
-    if (searchQuery) {
-      filtered = filtered.filter(
-        (order) =>
-          order.receiptNumber
-            .toLowerCase()
-            .includes(searchQuery.toLowerCase()) ||
-          order.customerName
-            ?.toLowerCase()
-            .includes(searchQuery.toLowerCase()) ||
-          order.customerEmail?.toLowerCase().includes(searchQuery.toLowerCase())
-      );
-    }
-
-    if (statusFilter !== "all") {
-      // For demo purposes, we'll assign random statuses
-      filtered = filtered.filter((_, index) => {
-        const statuses = ["completed", "pending", "processing"];
-        const status = statuses[index % statuses.length];
-        return status === statusFilter;
-      });
-    }
-
-    setFilteredOrders(filtered);
-  };
 
   const getOrderStatus = (index: number) => {
     const statuses = [
@@ -148,15 +80,8 @@ export default function OrdersPage() {
     return statusConfig || orderStatuses[0];
   };
 
-  const handleViewOrder = (order: OrderDetails) => {
-    setSelectedOrder(order);
-    setShowOrderDetails(true);
-  };
 
-  const handlePrintReceipt = (order: OrderDetails) => {
-    // In a real app, this would trigger receipt printing
-    console.log("Printing receipt for order:", order.receiptNumber);
-  };
+
 
   const formatDate = (date: Date) => {
     return new Date(date).toLocaleDateString("en-US", {
@@ -176,10 +101,6 @@ export default function OrdersPage() {
           <h1 className="text-2xl lg:text-3xl font-bold">Orders</h1>
           <p className="text-muted-foreground">Manage and track all orders</p>
         </div>
-        <Button onClick={loadOrders}>
-          <RefreshCw className="h-4 w-4 mr-2" />
-          Refresh
-        </Button>
       </div>
 
       {/* Stats Cards */}
@@ -190,7 +111,9 @@ export default function OrdersPage() {
               <Package className="h-4 w-4 text-blue-500" />
               <span className="text-sm font-medium">Total Orders</span>
             </div>
-            <p className="text-2xl font-bold mt-1">{orders.length}</p>
+            <p className="text-2xl font-bold mt-1">
+              {saleList?.data?.totalSales}
+            </p>
           </CardContent>
         </Card>
         <Card>
@@ -200,7 +123,7 @@ export default function OrdersPage() {
               <span className="text-sm font-medium">Total Revenue</span>
             </div>
             <p className="text-2xl font-bold mt-1">
-              ${orders.reduce((sum, order) => sum + order.total, 0).toFixed(2)}
+              {formatRiels(saleList?.data?.totalAmount)}
             </p>
           </CardContent>
         </Card>
@@ -210,9 +133,7 @@ export default function OrdersPage() {
               <RefreshCw className="h-4 w-4 text-yellow-500" />
               <span className="text-sm font-medium">Pending</span>
             </div>
-            <p className="text-2xl font-bold mt-1">
-              {orders.filter((_, i) => getOrderStatus(i) === "pending").length}
-            </p>
+            <p className="text-2xl font-bold mt-1"></p>
           </CardContent>
         </Card>
         <Card>
@@ -221,14 +142,7 @@ export default function OrdersPage() {
               <Calendar className="h-4 w-4 text-purple-500" />
               <span className="text-sm font-medium">Today</span>
             </div>
-            <p className="text-2xl font-bold mt-1">
-              {
-                orders.filter((order: any) => {
-                  const today = new Date().toDateString();
-                  return new Date(order.start_time).toDateString() === today;
-                }).length
-              }
-            </p>
+            <p className="text-2xl font-bold mt-1"></p>
           </CardContent>
         </Card>
       </div>
@@ -265,7 +179,6 @@ export default function OrdersPage() {
                 className="mt-1"
               />
             </div>
-          
           </div>
         </CardContent>
       </Card>
@@ -280,18 +193,16 @@ export default function OrdersPage() {
             <div className="min-w-full">
               {/* Table Header */}
               <div className="grid grid-cols-12 gap-4 p-4 border-b bg-muted/50 text-sm font-medium">
-                <div className="col-span-2">Order ID</div>
-                <div className="col-span-2">Customer</div>
+                <div className="col-span-2">Sale ID</div>
+                <div className="col-span-2">Table</div>
                 <div className="col-span-2">Date</div>
-                <div className="col-span-1">Items</div>
-                <div className="col-span-2">Total</div>
-                <div className="col-span-2">Status</div>
-                <div className="col-span-1">Actions</div>
+                <div className="col-span-1">Amount</div>
+                <div className="col-span-2">Payment Type</div>
               </div>
 
               {/* Table Body */}
               <div className="divide-y">
-                {filteredOrders.map((order, index) => {
+                {saleList?.data?.sales.map((order: any, index: number) => {
                   const status = getOrderStatus(index);
                   const statusConfig = getStatusBadge(status);
 
@@ -301,64 +212,23 @@ export default function OrdersPage() {
                       className="grid grid-cols-12 gap-4 p-4 hover:bg-muted/50"
                     >
                       <div className="col-span-2">
-                        <p className="font-medium">#{order.receiptNumber}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {order.paymentMethod}
+                        <p className="font-medium">#{order.id}</p>
+                      </div>
+                      <div className="col-span-2">
+                        <p className="font-medium">{order.tableName}</p>
+                      </div>
+                      <div className="col-span-2">
+                        <p className="text-sm">{formatDate(order.saleDate)}</p>
+                      </div>
+                      <div className="col-span-1">
+                        <p className="text-sm">
+                          {formatRiels(order.totalAmount)}
                         </p>
                       </div>
                       <div className="col-span-2">
-                        <p className="font-medium">{order.customerName}</p>
-                        {order.customerEmail && (
-                          <p className="text-xs text-muted-foreground">
-                            {order.customerEmail}
-                          </p>
-                        )}
-                      </div>
-                      <div className="col-span-2">
-                        <p className="text-sm">{formatDate(order.timestamp)}</p>
-                      </div>
-                      <div className="col-span-1">
-                        <p className="text-sm">{order.items.length}</p>
-                      </div>
-                      <div className="col-span-2">
-                        <p className="font-medium">${order.total.toFixed(2)}</p>
-                        {order.discount > 0 && (
-                          <p className="text-xs text-green-600">
-                            -${order.discount.toFixed(2)} discount
-                          </p>
-                        )}
-                      </div>
-                      <div className="col-span-2">
-                        <Badge className={statusConfig.color}>
-                          {statusConfig.label}
-                        </Badge>
-                      </div>
-                      <div className="col-span-1">
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-8 w-8"
-                            >
-                              <MoreHorizontal className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem
-                              onClick={() => handleViewOrder(order)}
-                            >
-                              <Eye className="h-4 w-4 mr-2" />
-                              View Details
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              onClick={() => handlePrintReceipt(order)}
-                            >
-                              <Printer className="h-4 w-4 mr-2" />
-                              Print Receipt
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
+                        <p className="font-medium">
+                          {order.paymentMethod.toUpperCase()}
+                        </p>
                       </div>
                     </div>
                   );
@@ -366,139 +236,8 @@ export default function OrdersPage() {
               </div>
             </div>
           </div>
-
-          {filteredOrders.length === 0 && (
-            <div className="p-12 text-center">
-              <Package className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-              <h3 className="font-medium mb-2">No orders found</h3>
-              <p className="text-muted-foreground">
-                {searchQuery || statusFilter !== "all"
-                  ? "Try adjusting your search or filters"
-                  : "Orders will appear here once customers start making purchases"}
-              </p>
-            </div>
-          )}
         </CardContent>
       </Card>
-
-      {/* Order Details Modal */}
-      <Dialog open={showOrderDetails} onOpenChange={setShowOrderDetails}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>
-              Order Details - #{selectedOrder?.receiptNumber}
-            </DialogTitle>
-          </DialogHeader>
-          {selectedOrder && (
-            <div className="space-y-6">
-              {/* Order Info */}
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div>
-                  <h3 className="font-medium mb-2">Customer Information</h3>
-                  <div className="space-y-1 text-sm">
-                    <p>
-                      <span className="font-medium">Name:</span>{" "}
-                      {selectedOrder.customerName}
-                    </p>
-                    {selectedOrder.customerEmail && (
-                      <p>
-                        <span className="font-medium">Email:</span>{" "}
-                        {selectedOrder.customerEmail}
-                      </p>
-                    )}
-                  </div>
-                </div>
-                <div>
-                  <h3 className="font-medium mb-2">Order Information</h3>
-                  <div className="space-y-1 text-sm">
-                    <p>
-                      <span className="font-medium">Date:</span>{" "}
-                      {formatDate(selectedOrder.timestamp)}
-                    </p>
-                    <p>
-                      <span className="font-medium">Payment:</span>{" "}
-                      {selectedOrder.paymentMethod}
-                    </p>
-                    <p>
-                      <span className="font-medium">Status:</span>{" "}
-                      <Badge
-                        className={getStatusBadge(getOrderStatus(0)).color}
-                      >
-                        {getStatusBadge(getOrderStatus(0)).label}
-                      </Badge>
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <Separator />
-
-              {/* Order Items */}
-              <div>
-                <h3 className="font-medium mb-4">Order Items</h3>
-                <div className="space-y-3">
-                  {selectedOrder.items.map((item, index) => (
-                    <div
-                      key={index}
-                      className="flex items-center justify-between p-3 border rounded-lg"
-                    >
-                      <div>
-                        <p className="font-medium">{item.name}</p>
-                        <p className="text-sm text-muted-foreground">
-                          ${item.price.toFixed(2)} × {item.quantity}
-                        </p>
-                      </div>
-                      <p className="font-medium">${item.total.toFixed(2)}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <Separator />
-
-              {/* Order Summary */}
-              <div>
-                <h3 className="font-medium mb-4">Order Summary</h3>
-                <div className="space-y-2">
-                  <div className="flex justify-between">
-                    <span>Subtotal</span>
-                    <span>${selectedOrder.subtotal.toFixed(2)}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Tax</span>
-                    <span>${selectedOrder.tax.toFixed(2)}</span>
-                  </div>
-                  {selectedOrder.discount > 0 && (
-                    <div className="flex justify-between text-green-600">
-                      <span>Discount</span>
-                      <span>-${selectedOrder.discount.toFixed(2)}</span>
-                    </div>
-                  )}
-                  <Separator />
-                  <div className="flex justify-between font-medium text-lg">
-                    <span>Total</span>
-                    <span>${selectedOrder.total.toFixed(2)}</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Actions */}
-              <div className="flex gap-2 pt-4">
-                <Button onClick={() => handlePrintReceipt(selectedOrder)}>
-                  <Printer className="h-4 w-4 mr-2" />
-                  Print Receipt
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={() => setShowOrderDetails(false)}
-                >
-                  Close
-                </Button>
-              </div>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }
