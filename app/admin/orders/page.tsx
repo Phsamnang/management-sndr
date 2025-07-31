@@ -12,6 +12,7 @@ import {
   Package,
   MoreHorizontal,
   CaseUpper,
+  Wallet,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,6 +23,7 @@ import { Label } from "@/components/ui/label";
 import { useQuery } from "@tanstack/react-query";
 import { SaleService } from "@/service/sale-service";
 import { formatRiels } from "@/lib/utils";
+import Loading from "./loading";
 
 
 
@@ -60,7 +62,7 @@ export default function OrdersPage() {
     })
 
 
-    if(saleList.isLoading) return <>Loading.....</>
+    if(saleList.isLoading) return <><Loading/></>
 
 
 
@@ -119,7 +121,7 @@ export default function OrdersPage() {
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center gap-2">
-              <DollarSign className="h-4 w-4 text-green-500" />
+              <Wallet className="h-4 w-4 text-green-500" />
               <span className="text-sm font-medium">Total Revenue</span>
             </div>
             <p className="text-2xl font-bold mt-1">
@@ -130,10 +132,12 @@ export default function OrdersPage() {
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center gap-2">
-              <RefreshCw className="h-4 w-4 text-yellow-500" />
-              <span className="text-sm font-medium">Pending</span>
+              <Wallet className="h-4 w-4 text-yellow-500" />
+              <span className="text-sm font-medium">UNPIAD</span>
             </div>
-            <p className="text-2xl font-bold mt-1"></p>
+            <p className="text-2xl font-bold mt-1">
+              {formatRiels(saleList?.data?.unPaidSales)}
+            </p>
           </CardContent>
         </Card>
         <Card>
@@ -212,7 +216,7 @@ export default function OrdersPage() {
                       className="grid grid-cols-12 gap-4 p-4 hover:bg-muted/50"
                     >
                       <div className="col-span-2">
-                        <p className="font-medium">#{order.id}</p>
+                        <p className="font-medium">#{order.referenceId}</p>
                       </div>
                       <div className="col-span-2">
                         <p className="font-medium">{order.tableName}</p>
