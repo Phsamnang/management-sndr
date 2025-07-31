@@ -28,7 +28,7 @@ import {
 import Link from "next/link";
 import { io } from "socket.io-client";
 import { deliveryService } from "@/service/delivery-service";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 type TableDeliveryOrder = {
   id: string;
   orderNumber: string;
@@ -59,9 +59,6 @@ type TableDeliveryOrder = {
 };
 
 export default function TableDeliveryPage() {
-
-
-
   const { data: deliveryFoods, isLoading } = useQuery({
     queryKey: ["deliveryFoods"],
     queryFn: deliveryService.getDeliveryFoods,
@@ -69,31 +66,33 @@ export default function TableDeliveryPage() {
 
   const queryClient = useQueryClient();
 
-     useEffect(() => {
-       // Connect to backend WebSocket server
-       const socket = io("http://localhost:8080"); // 🔁 Replace with your server URL
+  useEffect(() => {
+    // Connect to backend WebSocket server
+    const socket = io("http://localhost:8080"); // 🔁 Replace with your server URL
 
-       socket.on("connect", () => {
-         console.log("Connected to WebSocket server");
-       });
-       socket.on("foodDelivery", (data) => {
-         queryClient.invalidateQueries({ queryKey: ["deliveryFoods"] });
-       });
-       return () => {
-         socket.disconnect();
-       };
-     }, []);
+    socket.on("connect", () => {
+      console.log("Connected to WebSocket server");
+    });
+    socket.on("foodDelivery", (data) => {
+      queryClient.invalidateQueries({ queryKey: ["deliveryFoods"] });
+    });
+    return () => {
+      socket.disconnect();
+    };
+  }, []);
 
+  const updateDelivery = useMutation({
+    mutationFn: (data: any) => deliveryService.updateDelivery(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["deliveryFoods"] });
+    },
+  });
 
-
-
-  if(isLoading) return <div>Loading...</div>
-
-
+  if (isLoading) return <div>Loading...</div>;
 
   // Filter orders - only show non-delivered orders
   const filteredOrders = deliveryFoods?.filter(
-    (order:any) => order.status !== "shiped"
+    (order: any) => order.status !== "shiped"
   );
 
   // Calculate wait time since completion
@@ -152,7 +151,6 @@ export default function TableDeliveryPage() {
         return "bg-gray-100 text-gray-800";
     }
   };
-
 
   return (
     <div className="flex min-h-screen flex-col bg-gradient-to-br from-green-50 to-gray-100">
@@ -298,11 +296,10 @@ export default function TableDeliveryPage() {
 
                     {/* Progress */}
                     <TableCell className="w-32">
-                        <div className="text-center text-gray-400">
-                          <Package className="h-5 w-5 mx-auto" />
-                          <div className="text-xs">Ready</div>
-                        </div>
-                
+                      <div className="text-center text-gray-400">
+                        <Package className="h-5 w-5 mx-auto" />
+                        <div className="text-xs">Ready</div>
+                      </div>
                     </TableCell>
 
                     {/* Time */}
@@ -326,7 +323,12 @@ export default function TableDeliveryPage() {
                           <Button
                             size="sm"
                             className="bg-green-600 hover:bg-green-700 text-white"
-                          
+                            onClick={() =>
+                              updateDelivery.mutate({
+                                id: order.id,
+                                status: "delivered",
+                              })
+                            }
                           >
                             <Play className="h-3 w-3 mr-1" />
                             Pickup

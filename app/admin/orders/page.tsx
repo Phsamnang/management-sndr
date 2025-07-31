@@ -25,35 +25,50 @@ import { SaleService } from "@/service/sale-service";
 import { formatRiels } from "@/lib/utils";
 import Loading from "./loading";
 
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
-
-const orderStatuses = [
-  {
-    value: "pending",
-    label: "Pending",
-    color: "bg-yellow-100 text-yellow-800",
-  },
-  {
-    value: "processing",
-    label: "Processing",
-    color: "bg-blue-100 text-blue-800",
-  },
-  {
-    value: "completed",
-    label: "Completed",
-    color: "bg-green-100 text-green-800",
-  },
-  { value: "cancelled", label: "Cancelled", color: "bg-red-100 text-red-800" },
-  { value: "refunded", label: "Refunded", color: "bg-gray-100 text-gray-800" },
-];
 
 export default function OrdersPage() {
+   
+ const router = useRouter();
+ const pathname = usePathname();
+ const searchParams = useSearchParams();
 
-  const [showOrderDetails, setShowOrderDetails] = useState(false);
-   const [dateFilter, setDateFilter] = useState({
-      startDate: new Date().toISOString().split("T")[0], // Today's date
-      endDate: new Date().toISOString().split("T")[0], // Today's date
-    });
+  const [dateFilter, setDateFilter] = useState({
+    startDate: "",
+    endDate: "",
+  });
+
+  // Load from searchParams on first render
+  useEffect(() => {
+    const start =
+      searchParams.get("startDate") ?? new Date().toISOString().split("T")[0];
+    const end =
+      searchParams.get("endDate") ?? new Date().toISOString().split("T")[0];
+
+    setDateFilter({ startDate: start, endDate: end });
+  }, [searchParams]); // Ensures sync with URL
+
+  // Update URL when local state changes
+  useEffect(() => {
+    if (!dateFilter.startDate || !dateFilter.endDate) return;
+
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("startDate", dateFilter.startDate);
+    params.set("endDate", dateFilter.endDate);
+
+    router.push(`${pathname}?${params.toString()}`);
+  }, [dateFilter]);
+
+  // Input change handler
+  const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setDateFilter((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
 
 
     const saleList=useQuery({
@@ -75,11 +90,6 @@ export default function OrdersPage() {
       "completed",
     ];
     return statuses[index % statuses.length];
-  };
-
-  const getStatusBadge = (status: string) => {
-    const statusConfig = orderStatuses.find((s) => s.value === status);
-    return statusConfig || orderStatuses[0];
   };
 
 
@@ -144,9 +154,11 @@ export default function OrdersPage() {
           <CardContent className="p-4">
             <div className="flex items-center gap-2">
               <Calendar className="h-4 w-4 text-purple-500" />
-              <span className="text-sm font-medium">Today</span>
+              <span className="text-sm font-medium">Total Amount</span>
             </div>
-            <p className="text-2xl font-bold mt-1"></p>
+            <p className="text-2xl font-bold mt-1">
+              {formatRiels(saleList?.data?.totalAmountSales)}
+            </p>
           </CardContent>
         </Card>
       </div>
@@ -162,10 +174,9 @@ export default function OrdersPage() {
               <Input
                 id="startDate"
                 type="date"
+                name="startDate"
                 value={dateFilter.startDate}
-                onChange={(e) =>
-                  setDateFilter({ ...dateFilter, startDate: e.target.value })
-                }
+                onChange={(e) => handleDateChange(e)}
                 className="mt-1"
               />
             </div>
@@ -176,10 +187,9 @@ export default function OrdersPage() {
               <Input
                 id="endDate"
                 type="date"
+                name="endDate"
                 value={dateFilter.endDate}
-                onChange={(e) =>
-                  setDateFilter({ ...dateFilter, endDate: e.target.value })
-                }
+                onChange={(e) => handleDateChange(e)}
                 className="mt-1"
               />
             </div>
@@ -208,15 +218,13 @@ export default function OrdersPage() {
               <div className="divide-y">
                 {saleList?.data?.sales.map((order: any, index: number) => {
                   const status = getOrderStatus(index);
-                  const statusConfig = getStatusBadge(status);
-
                   return (
                     <div
                       key={order.id}
                       className="grid grid-cols-12 gap-4 p-4 hover:bg-muted/50"
                     >
                       <div className="col-span-2">
-                        <p className="font-medium">#{order.referenceId}</p>
+                        <p className="font-medium">{order.referenceId}</p>
                       </div>
                       <div className="col-span-2">
                         <p className="font-medium">{order.tableName}</p>
