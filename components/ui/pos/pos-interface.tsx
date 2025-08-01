@@ -56,7 +56,7 @@ export default function TableSelection() {
 
   useEffect(()=>{
     useClient.invalidateQueries({queryKey:['table']})
-  },[])
+  },[tableInfo])
 
   // Initial table data with dynamic categories
   const [tableData, setTableData] = useState<Table[]>([
