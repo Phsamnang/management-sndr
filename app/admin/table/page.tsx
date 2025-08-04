@@ -1,49 +1,72 @@
-"use client"
-"use client"
+"use client";
+"use client";
 
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Badge } from "@/components/ui/badge"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
-import { Textarea } from "@/components/ui/textarea"
-import { Plus, Users, MapPin, Edit, Trash2, Eye, Settings } from "lucide-react"
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
+import { Plus, Users, MapPin, Edit, Trash2, Eye, Settings } from "lucide-react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { tableService } from "@/service/table-service";
+import { formatDate } from "@/lib/utils";
 
 interface Table {
-  id: string
-  name: string
-  number: string
-  type: string
-  capacity: number
-  section: string
-  status: "available" | "occupied" | "reserved" | "maintenance"
-  description?: string
-  createdAt: Date
+  id: string;
+  name: string;
+  number: string;
+  type: string;
+  capacity: number;
+  section: string;
+  status: "available" | "occupied" | "reserved" | "maintenance";
+  description?: string;
+  createdAt: Date;
 }
 
 interface TableType {
-  value: string
-  label: string
-  icon: string
+  value: string;
+  label: string;
+  icon: string;
 }
 
 const sections = [
   { value: "main", label: "Main Dining", color: "bg-blue-100 text-blue-800" },
   { value: "patio", label: "Patio", color: "bg-green-100 text-green-800" },
   { value: "bar", label: "Bar Area", color: "bg-orange-100 text-orange-800" },
-  { value: "vip", label: "VIP Section", color: "bg-purple-100 text-purple-800" },
-  { value: "window", label: "Window Side", color: "bg-yellow-100 text-yellow-800" },
-]
+  {
+    value: "vip",
+    label: "VIP Section",
+    color: "bg-purple-100 text-purple-800",
+  },
+  {
+    value: "window",
+    label: "Window Side",
+    color: "bg-yellow-100 text-yellow-800",
+  },
+];
 
-const statusColors = {
+const statusColors:any = {
   available: "bg-green-100 text-green-800",
   occupied: "bg-red-100 text-red-800",
   reserved: "bg-blue-100 text-blue-800",
   maintenance: "bg-gray-100 text-gray-800",
-}
+};
 
 export default function TablesPage() {
   const [tableTypes, setTableTypes] = useState<TableType[]>([
@@ -53,7 +76,7 @@ export default function TablesPage() {
     { value: "outdoor", label: "Outdoor Table", icon: "🌳" },
     { value: "private", label: "Private Dining", icon: "🏛️" },
     { value: "counter", label: "Counter Seating", icon: "🥢" },
-  ])
+  ]);
 
   const [tables, setTables] = useState<Table[]>([
     {
@@ -111,11 +134,11 @@ export default function TablesPage() {
       description: "Private dining room",
       createdAt: new Date("2024-01-17"),
     },
-  ])
-
-  const [isAddModalOpen, setIsAddModalOpen] = useState(false)
-  const [isAddTypeModalOpen, setIsAddTypeModalOpen] = useState(false)
-  const [editingTable, setEditingTable] = useState<Table | null>(null)
+  ]);
+  const useClient = useQueryClient();
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isAddTypeModalOpen, setIsAddTypeModalOpen] = useState(false);
+  const [editingTable, setEditingTable] = useState<Table | null>(null);
   const [newTable, setNewTable] = useState({
     name: "",
     number: "",
@@ -124,15 +147,15 @@ export default function TablesPage() {
     section: "",
     status: "available" as const,
     description: "",
-  })
+  });
   const [newTableType, setNewTableType] = useState({
     value: "",
     label: "",
     icon: "🪑",
-  })
+  });
 
   const handleAddTable = () => {
-    if (!newTable.name || !newTable.number || !newTable.type || !newTable.section) return
+    if (!newTable.name) return;
 
     const table: Table = {
       id: Date.now().toString(),
@@ -144,41 +167,58 @@ export default function TablesPage() {
       status: newTable.status,
       description: newTable.description,
       createdAt: new Date(),
-    }
+    };
 
-    setTables([...tables, table])
-    setNewTable({
-      name: "",
-      number: "",
-      type: "",
-      capacity: 2,
-      section: "",
-      status: "available",
-      description: "",
-    })
-    setIsAddModalOpen(false)
-  }
+    createTable.mutate({
+      name: table.name,
+      typeId: table.type,
+    });
+
+    setTables([...tables, table]);
+   
+  };
+
+  const createTable = useMutation({
+    mutationFn: (data: any) => tableService.createTable(data),
+    onSuccess: () => {
+      useClient.invalidateQueries({ queryKey: ["allTables"] });
+       setNewTable({
+         name: "",
+         number: "",
+         type: "",
+         capacity: 2,
+         section: "",
+         status: "available",
+         description: "",
+       });
+      setIsAddModalOpen(false);
+    },
+  });
+
+  const typeList = useQuery({
+    queryFn: () => tableService.getAllTableTypes(),
+    queryKey: ["allTableType"],
+  });
+
+  const tableList = useQuery({
+    queryFn: () => tableService.getAllTables(),
+    queryKey: ["allTables"],
+  });
 
   const handleAddTableType = () => {
-    if (!newTableType.value || !newTableType.label) return
-
     const tableType: TableType = {
       value: newTableType.value.toLowerCase().replace(/\s+/g, "-"),
       label: newTableType.label,
       icon: newTableType.icon,
-    }
+    };
 
-    setTableTypes([...tableTypes, tableType])
-    setNewTableType({
-      value: "",
-      label: "",
-      icon: "🪑",
-    })
-    setIsAddTypeModalOpen(false)
-  }
+    createTypeTable.mutate({
+      name: tableType.label,
+    });
+  };
 
   const handleEditTable = (table: Table) => {
-    setEditingTable(table)
+    setEditingTable(table);
     setNewTable({
       name: table.name,
       number: table.number,
@@ -187,11 +227,18 @@ export default function TablesPage() {
       section: table.section,
       status: table.status,
       description: table.description || "",
-    })
-  }
+    });
+  };
 
   const handleUpdateTable = () => {
-    if (!editingTable || !newTable.name || !newTable.number || !newTable.type || !newTable.section) return
+    if (
+      !editingTable ||
+      !newTable.name ||
+      !newTable.number ||
+      !newTable.type ||
+      !newTable.section
+    )
+      return;
 
     setTables(
       tables.map((table) =>
@@ -206,11 +253,11 @@ export default function TablesPage() {
               status: newTable.status,
               description: newTable.description,
             }
-          : table,
-      ),
-    )
+          : table
+      )
+    );
 
-    setEditingTable(null)
+    setEditingTable(null);
     setNewTable({
       name: "",
       number: "",
@@ -219,47 +266,79 @@ export default function TablesPage() {
       section: "",
       status: "available",
       description: "",
-    })
-  }
+    });
+  };
+
+  const createTypeTable = useMutation({
+    mutationFn: (data: any) => tableService.createTypeTable(data),
+    onSuccess: () => {
+      setIsAddTypeModalOpen(false);
+      useClient.invalidateQueries({ queryKey: ["allTableType"] });
+    },
+  });
 
   const handleDeleteTable = (id: string) => {
-    setTables(tables.filter((table) => table.id !== id))
-  }
+    setTables(tables.filter((table) => table.id !== id));
+  };
 
   const handleDeleteTableType = (value: string) => {
     // Don't allow deletion if tables are using this type
-    const tablesUsingType = tables.filter((table) => table.type === value)
+    const tablesUsingType = tables.filter((table) => table.type === value);
     if (tablesUsingType.length > 0) {
       alert(
-        `Cannot delete table type "${getTypeLabel(value)}" because ${tablesUsingType.length} table(s) are using it.`,
-      )
-      return
+        `Cannot delete table type "${getTypeLabel(value)}" because ${
+          tablesUsingType.length
+        } table(s) are using it.`
+      );
+      return;
     }
-    setTableTypes(tableTypes.filter((type) => type.value !== value))
-  }
+    setTableTypes(tableTypes.filter((type) => type.value !== value));
+  };
 
   const getTypeLabel = (type: string) => {
-    return tableTypes.find((t) => t.value === type)?.label || type
-  }
+    return tableTypes.find((t) => t.value === type)?.label || type;
+  };
 
   const getTypeIcon = (type: string) => {
-    return tableTypes.find((t) => t.value === type)?.icon || "🪑"
-  }
+    return tableTypes.find((t) => t.value === type)?.icon || "🪑";
+  };
 
   const getSectionLabel = (section: string) => {
-    return sections.find((s) => s.value === section)?.label || section
-  }
+    return sections.find((s) => s.value === section)?.label || section;
+  };
 
   const getSectionColor = (section: string) => {
-    return sections.find((s) => s.value === section)?.color || "bg-gray-100 text-gray-800"
-  }
+    return (
+      sections.find((s) => s.value === section)?.color ||
+      "bg-gray-100 text-gray-800"
+    );
+  };
 
-  const availableTables = tables.filter((t) => t.status === "available").length
-  const occupiedTables = tables.filter((t) => t.status === "occupied").length
-  const reservedTables = tables.filter((t) => t.status === "reserved").length
-  const maintenanceTables = tables.filter((t) => t.status === "maintenance").length
+  const availableTables = tableList?.data?.filter(
+    (t: any) => t.status === "available"
+  ).length;
+  const occupiedTables = tableList?.data?.filter(
+    (t: any) => t.status === "occupied"
+  ).length;
+  const reservedTables = tableList?.data?.filter(
+    (t: any) => t.status === "reserved"
+  ).length;
 
-  const commonIcons = ["🪑", "🛋️", "🍺", "🌳", "🏛️", "🥢", "🍽️", "☕", "🥂", "🎪", "🏖️", "🎭"]
+
+  const commonIcons = [
+    "🪑",
+    "🛋️",
+    "🍺",
+    "🌳",
+    "🏛️",
+    "🥢",
+    "🍽️",
+    "☕",
+    "🥂",
+    "🎪",
+    "🏖️",
+    "🎭",
+  ];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
@@ -270,14 +349,22 @@ export default function TablesPage() {
             <div className="flex items-center space-x-4">
               <div className="flex items-center space-x-2">
                 <MapPin className="h-8 w-8 text-blue-600" />
-                <h1 className="text-2xl font-bold text-gray-900">Table Management</h1>
+                <h1 className="text-2xl font-bold text-gray-900">
+                  Table Management
+                </h1>
               </div>
             </div>
 
             <div className="flex space-x-3">
-              <Dialog open={isAddTypeModalOpen} onOpenChange={setIsAddTypeModalOpen}>
+              <Dialog
+                open={isAddTypeModalOpen}
+                onOpenChange={setIsAddTypeModalOpen}
+              >
                 <DialogTrigger asChild>
-                  <Button variant="outline" className="border-blue-600 text-blue-600 hover:bg-blue-50 bg-transparent">
+                  <Button
+                    variant="outline"
+                    className="border-blue-600 text-blue-600 hover:bg-blue-50 bg-transparent"
+                  >
                     <Settings className="h-4 w-4 mr-2" />
                     Add Table Type
                   </Button>
@@ -293,40 +380,21 @@ export default function TablesPage() {
                         id="type-label"
                         placeholder="e.g., High Top, Communal Table"
                         value={newTableType.label}
-                        onChange={(e) => setNewTableType({ ...newTableType, label: e.target.value })}
-                      />
-                    </div>
-
-                    <div>
-                      <Label htmlFor="type-icon">Icon</Label>
-                      <div className="flex flex-wrap gap-2 mt-2 mb-3">
-                        {commonIcons.map((icon) => (
-                          <Button
-                            key={icon}
-                            type="button"
-                            variant={newTableType.icon === icon ? "default" : "outline"}
-                            size="sm"
-                            onClick={() => setNewTableType({ ...newTableType, icon })}
-                            className="text-lg p-2 h-10 w-10"
-                          >
-                            {icon}
-                          </Button>
-                        ))}
-                      </div>
-                      <Input
-                        id="type-icon"
-                        placeholder="Or enter custom emoji"
-                        value={newTableType.icon}
-                        onChange={(e) => setNewTableType({ ...newTableType, icon: e.target.value })}
-                        className="text-center text-lg"
+                        onChange={(e) =>
+                          setNewTableType({
+                            ...newTableType,
+                            label: e.target.value,
+                          })
+                        }
                       />
                     </div>
 
                     <div className="bg-gray-50 p-3 rounded-lg">
                       <Label className="text-sm text-gray-600">Preview:</Label>
                       <div className="flex items-center space-x-2 mt-1">
-                        <span className="text-2xl">{newTableType.icon}</span>
-                        <span className="font-medium">{newTableType.label || "Table Type Name"}</span>
+                        <span className="font-medium">
+                          {newTableType.label || "Table Type Name"}
+                        </span>
                       </div>
                     </div>
 
@@ -359,17 +427,9 @@ export default function TablesPage() {
                         id="name"
                         placeholder="e.g., Window View Table, Family Booth"
                         value={newTable.name}
-                        onChange={(e) => setNewTable({ ...newTable, name: e.target.value })}
-                      />
-                    </div>
-
-                    <div>
-                      <Label htmlFor="number">Table Number</Label>
-                      <Input
-                        id="number"
-                        placeholder="e.g., T001, B001"
-                        value={newTable.number}
-                        onChange={(e) => setNewTable({ ...newTable, number: e.target.value })}
+                        onChange={(e) =>
+                          setNewTable({ ...newTable, name: e.target.value })
+                        }
                       />
                     </div>
 
@@ -377,17 +437,18 @@ export default function TablesPage() {
                       <Label htmlFor="type">Table Type</Label>
                       <Select
                         value={newTable.type}
-                        onValueChange={(value) => setNewTable({ ...newTable, type: value })}
+                        onValueChange={(value) =>
+                          setNewTable({ ...newTable, type: value })
+                        }
                       >
                         <SelectTrigger>
                           <SelectValue placeholder="Select table type" />
                         </SelectTrigger>
                         <SelectContent>
-                          {tableTypes.map((type) => (
-                            <SelectItem key={type.value} value={type.value}>
+                          {typeList?.data?.map((type: any) => (
+                            <SelectItem key={type.id} value={type.id}>
                               <div className="flex items-center space-x-2">
-                                <span>{type.icon}</span>
-                                <span>{type.label}</span>
+                                <span>{type.name}</span>
                               </div>
                             </SelectItem>
                           ))}
@@ -395,69 +456,10 @@ export default function TablesPage() {
                       </Select>
                     </div>
 
-                    <div>
-                      <Label htmlFor="capacity">Capacity</Label>
-                      <Input
-                        id="capacity"
-                        type="number"
-                        min="1"
-                        max="20"
-                        value={newTable.capacity}
-                        onChange={(e) => setNewTable({ ...newTable, capacity: Number.parseInt(e.target.value) || 2 })}
-                      />
-                    </div>
-
-                    <div>
-                      <Label htmlFor="section">Section</Label>
-                      <Select
-                        value={newTable.section}
-                        onValueChange={(value) => setNewTable({ ...newTable, section: value })}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select section" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {sections.map((section) => (
-                            <SelectItem key={section.value} value={section.value}>
-                              {section.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <div>
-                      <Label htmlFor="status">Status</Label>
-                      <Select
-                        value={newTable.status}
-                        onValueChange={(value: any) => setNewTable({ ...newTable, status: value })}
-                      >
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="available">Available</SelectItem>
-                          <SelectItem value="occupied">Occupied</SelectItem>
-                          <SelectItem value="reserved">Reserved</SelectItem>
-                          <SelectItem value="maintenance">Maintenance</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <div>
-                      <Label htmlFor="description">Description (Optional)</Label>
-                      <Textarea
-                        id="description"
-                        placeholder="Table description or notes"
-                        value={newTable.description}
-                        onChange={(e) => setNewTable({ ...newTable, description: e.target.value })}
-                      />
-                    </div>
-
                     <Button
                       onClick={handleAddTable}
                       className="w-full bg-blue-600 hover:bg-blue-700"
-                      disabled={!newTable.name || !newTable.number || !newTable.type || !newTable.section}
+                      disabled={!newTable.name}
                     >
                       Add Table
                     </Button>
@@ -472,32 +474,25 @@ export default function TablesPage() {
       {/* Table Types Management Section */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         <div className="mb-8">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Table Types ({tableTypes.length})</h2>
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">
+            Table Types ({typeList?.data?.length})
+          </h2>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-            {tableTypes.map((type) => {
-              const tablesUsingType = tables.filter((table) => table.type === type.value).length
+            {typeList?.data?.map((type: any) => {
               return (
-                <Card key={type.value} className="hover:shadow-md transition-shadow">
+                <Card
+                  key={type.id}
+                  className="hover:shadow-md transition-shadow"
+                >
                   <CardContent className="p-4">
                     <div className="flex flex-col items-center space-y-2">
-                      <span className="text-3xl">{type.icon}</span>
-                      <span className="font-medium text-sm text-center">{type.label}</span>
-                      <Badge variant="secondary" className="text-xs">
-                        {tablesUsingType} tables
-                      </Badge>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleDeleteTableType(type.value)}
-                        className="text-red-600 hover:text-red-700 hover:bg-red-50 w-full"
-                        disabled={tablesUsingType > 0}
-                      >
-                        <Trash2 className="h-3 w-3" />
-                      </Button>
+                      <span className="font-medium text-sm text-center">
+                        {type.name}
+                      </span>
                     </div>
                   </CardContent>
                 </Card>
-              )
+              );
             })}
           </div>
         </div>
@@ -509,7 +504,9 @@ export default function TablesPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-gray-600">Available</p>
-                  <p className="text-3xl font-bold text-green-600">{availableTables}</p>
+                  <p className="text-3xl font-bold text-green-600">
+                    {availableTables}
+                  </p>
                 </div>
                 <div className="h-12 w-12 bg-green-100 rounded-lg flex items-center justify-center">
                   <Users className="h-6 w-6 text-green-600" />
@@ -523,7 +520,9 @@ export default function TablesPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-gray-600">Occupied</p>
-                  <p className="text-3xl font-bold text-red-600">{occupiedTables}</p>
+                  <p className="text-3xl font-bold text-red-600">
+                    {occupiedTables}
+                  </p>
                 </div>
                 <div className="h-12 w-12 bg-red-100 rounded-lg flex items-center justify-center">
                   <Users className="h-6 w-6 text-red-600" />
@@ -537,7 +536,9 @@ export default function TablesPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-gray-600">Reserved</p>
-                  <p className="text-3xl font-bold text-blue-600">{reservedTables}</p>
+                  <p className="text-3xl font-bold text-blue-600">
+                    {reservedTables}
+                  </p>
                 </div>
                 <div className="h-12 w-12 bg-blue-100 rounded-lg flex items-center justify-center">
                   <Users className="h-6 w-6 text-blue-600" />
@@ -550,8 +551,12 @@ export default function TablesPage() {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Total Tables</p>
-                  <p className="text-3xl font-bold text-gray-900">{tables.length}</p>
+                  <p className="text-sm font-medium text-gray-600">
+                    Total Tables
+                  </p>
+                  <p className="text-3xl font-bold text-gray-900">
+                    {tableList?.data?.length}
+                  </p>
                 </div>
                 <div className="h-12 w-12 bg-gray-100 rounded-lg flex items-center justify-center">
                   <MapPin className="h-6 w-6 text-gray-600" />
@@ -563,50 +568,39 @@ export default function TablesPage() {
 
         {/* Tables Grid */}
         <div>
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">All Tables ({tables.length})</h2>
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">
+            All Tables ({tables.length})
+          </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {tables.map((table) => (
-              <Card key={table.id} className="hover:shadow-lg transition-shadow">
+            {tableList?.data?.map((table: any) => (
+              <Card
+                key={table.id}
+                className="hover:shadow-lg transition-shadow"
+              >
                 <CardHeader className="pb-3">
                   <div className="flex items-center justify-between">
                     <CardTitle className="text-lg font-semibold flex items-center space-x-2">
-                      <span className="text-2xl">{getTypeIcon(table.type)}</span>
                       <div className="flex flex-col">
                         <span>{table.name}</span>
-                        <span className="text-sm font-normal text-gray-500">{table.number}</span>
                       </div>
                     </CardTitle>
-                    <Badge className={statusColors[table.status]}>{table.status}</Badge>
+                    <Badge className={statusColors[table.status]}>
+                      {table.status}
+                    </Badge>
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-3">
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-gray-600">Type:</span>
-                    <span className="font-medium">{getTypeLabel(table.type)}</span>
+                    <span className="font-medium">
+                      {getTypeLabel(table.category)}
+                    </span>
                   </div>
-
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-gray-600">Capacity:</span>
-                    <div className="flex items-center space-x-1">
-                      <Users className="h-4 w-4 text-gray-400" />
-                      <span className="font-medium">{table.capacity}</span>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-gray-600">Section:</span>
-                    <Badge className={getSectionColor(table.section)}>{getSectionLabel(table.section)}</Badge>
-                  </div>
-
-                  {table.description && (
-                    <div className="text-sm">
-                      <span className="text-gray-600">Notes:</span>
-                      <p className="text-gray-800 mt-1">{table.description}</p>
-                    </div>
-                  )}
 
                   <div className="flex items-center justify-between pt-3 border-t">
-                    <span className="text-xs text-gray-500">Added {table.createdAt.toLocaleDateString()}</span>
+                    <span className="text-xs text-gray-500">
+                      Added {formatDate(table.createdAt)}
+                    </span>
                     <div className="flex space-x-2">
                       <Dialog>
                         <DialogTrigger asChild>
@@ -616,7 +610,9 @@ export default function TablesPage() {
                         </DialogTrigger>
                         <DialogContent>
                           <DialogHeader>
-                            <DialogTitle>Table Details - {table.name}</DialogTitle>
+                            <DialogTitle>
+                              Table Details - {table.name}
+                            </DialogTitle>
                           </DialogHeader>
                           <div className="space-y-4">
                             <div className="grid grid-cols-2 gap-4">
@@ -630,29 +626,41 @@ export default function TablesPage() {
                               </div>
                               <div>
                                 <Label>Type</Label>
-                                <p className="font-medium">{getTypeLabel(table.type)}</p>
+                                <p className="font-medium">
+                                  {getTypeLabel(table.type)}
+                                </p>
                               </div>
                               <div>
                                 <Label>Capacity</Label>
-                                <p className="font-medium">{table.capacity} people</p>
+                                <p className="font-medium">
+                                  {table.capacity} people
+                                </p>
                               </div>
                               <div>
                                 <Label>Section</Label>
-                                <p className="font-medium">{getSectionLabel(table.section)}</p>
+                                <p className="font-medium">
+                                  {getSectionLabel(table.section)}
+                                </p>
                               </div>
                               <div>
                                 <Label>Status</Label>
-                                <Badge className={statusColors[table.status]}>{table.status}</Badge>
+                                <Badge className={statusColors[table.status]}>
+                                  {table.status}
+                                </Badge>
                               </div>
                               <div>
                                 <Label>Created</Label>
-                                <p className="font-medium">{table.createdAt.toLocaleDateString()}</p>
+                                <p className="font-medium">
+                                  {formatDate(table.createdAt)}
+                                </p>
                               </div>
                             </div>
                             {table.description && (
                               <div>
                                 <Label>Description</Label>
-                                <p className="font-medium">{table.description}</p>
+                                <p className="font-medium">
+                                  {table.description}
+                                </p>
                               </div>
                             )}
                           </div>
@@ -661,7 +669,11 @@ export default function TablesPage() {
 
                       <Dialog>
                         <DialogTrigger asChild>
-                          <Button variant="outline" size="sm" onClick={() => handleEditTable(table)}>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleEditTable(table)}
+                          >
                             <Edit className="h-4 w-4" />
                           </Button>
                         </DialogTrigger>
@@ -675,7 +687,12 @@ export default function TablesPage() {
                               <Input
                                 id="edit-name"
                                 value={newTable.name}
-                                onChange={(e) => setNewTable({ ...newTable, name: e.target.value })}
+                                onChange={(e) =>
+                                  setNewTable({
+                                    ...newTable,
+                                    name: e.target.value,
+                                  })
+                                }
                               />
                             </div>
 
@@ -684,7 +701,12 @@ export default function TablesPage() {
                               <Input
                                 id="edit-number"
                                 value={newTable.number}
-                                onChange={(e) => setNewTable({ ...newTable, number: e.target.value })}
+                                onChange={(e) =>
+                                  setNewTable({
+                                    ...newTable,
+                                    number: e.target.value,
+                                  })
+                                }
                               />
                             </div>
 
@@ -692,14 +714,19 @@ export default function TablesPage() {
                               <Label htmlFor="edit-type">Table Type</Label>
                               <Select
                                 value={newTable.type}
-                                onValueChange={(value) => setNewTable({ ...newTable, type: value })}
+                                onValueChange={(value) =>
+                                  setNewTable({ ...newTable, type: value })
+                                }
                               >
                                 <SelectTrigger>
                                   <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
                                   {tableTypes.map((type) => (
-                                    <SelectItem key={type.value} value={type.value}>
+                                    <SelectItem
+                                      key={type.value}
+                                      value={type.value}
+                                    >
                                       <div className="flex items-center space-x-2">
                                         <span>{type.icon}</span>
                                         <span>{type.label}</span>
@@ -719,7 +746,11 @@ export default function TablesPage() {
                                 max="20"
                                 value={newTable.capacity}
                                 onChange={(e) =>
-                                  setNewTable({ ...newTable, capacity: Number.parseInt(e.target.value) || 2 })
+                                  setNewTable({
+                                    ...newTable,
+                                    capacity:
+                                      Number.parseInt(e.target.value) || 2,
+                                  })
                                 }
                               />
                             </div>
@@ -728,14 +759,19 @@ export default function TablesPage() {
                               <Label htmlFor="edit-section">Section</Label>
                               <Select
                                 value={newTable.section}
-                                onValueChange={(value) => setNewTable({ ...newTable, section: value })}
+                                onValueChange={(value) =>
+                                  setNewTable({ ...newTable, section: value })
+                                }
                               >
                                 <SelectTrigger>
                                   <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
                                   {sections.map((section) => (
-                                    <SelectItem key={section.value} value={section.value}>
+                                    <SelectItem
+                                      key={section.value}
+                                      value={section.value}
+                                    >
                                       {section.label}
                                     </SelectItem>
                                   ))}
@@ -747,30 +783,50 @@ export default function TablesPage() {
                               <Label htmlFor="edit-status">Status</Label>
                               <Select
                                 value={newTable.status}
-                                onValueChange={(value: any) => setNewTable({ ...newTable, status: value })}
+                                onValueChange={(value: any) =>
+                                  setNewTable({ ...newTable, status: value })
+                                }
                               >
                                 <SelectTrigger>
                                   <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
-                                  <SelectItem value="available">Available</SelectItem>
-                                  <SelectItem value="occupied">Occupied</SelectItem>
-                                  <SelectItem value="reserved">Reserved</SelectItem>
-                                  <SelectItem value="maintenance">Maintenance</SelectItem>
+                                  <SelectItem value="available">
+                                    Available
+                                  </SelectItem>
+                                  <SelectItem value="occupied">
+                                    Occupied
+                                  </SelectItem>
+                                  <SelectItem value="reserved">
+                                    Reserved
+                                  </SelectItem>
+                                  <SelectItem value="maintenance">
+                                    Maintenance
+                                  </SelectItem>
                                 </SelectContent>
                               </Select>
                             </div>
 
                             <div>
-                              <Label htmlFor="edit-description">Description</Label>
+                              <Label htmlFor="edit-description">
+                                Description
+                              </Label>
                               <Textarea
                                 id="edit-description"
                                 value={newTable.description}
-                                onChange={(e) => setNewTable({ ...newTable, description: e.target.value })}
+                                onChange={(e) =>
+                                  setNewTable({
+                                    ...newTable,
+                                    description: e.target.value,
+                                  })
+                                }
                               />
                             </div>
 
-                            <Button onClick={handleUpdateTable} className="w-full bg-blue-600 hover:bg-blue-700">
+                            <Button
+                              onClick={handleUpdateTable}
+                              className="w-full bg-blue-600 hover:bg-blue-700"
+                            >
                               Update Table
                             </Button>
                           </div>
@@ -794,6 +850,5 @@ export default function TablesPage() {
         </div>
       </div>
     </div>
-  )
+  );
 }
-

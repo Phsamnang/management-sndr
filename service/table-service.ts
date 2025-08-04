@@ -2,6 +2,7 @@ import { http } from "@/app/utils/http";
 
 const ServiceId = {
   TABLE: "/table",
+  TYPE_TABLE:"/table/type"
 } as const;
 
 const getAllTables = async () => {
@@ -14,7 +15,19 @@ const getAllTableTypes = async () => {
   return response.data;
 };
 
+const createTypeTable=async(data:any)=>{
+  const rs=await http.post(ServiceId.TYPE_TABLE,data);
+  return rs.data;
+}
+
+const createTable = async (data: any) => {
+  const rs = await http.post(ServiceId.TABLE, data);
+  return rs.data;
+};
+
 export const tableService = {
   getAllTables,
   getAllTableTypes,
+  createTypeTable,
+  createTable
 };

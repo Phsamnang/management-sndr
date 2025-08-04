@@ -22,7 +22,7 @@ import { Separator } from "@/components/ui/separator";
 import { Label } from "@/components/ui/label";
 import { useQuery } from "@tanstack/react-query";
 import { SaleService } from "@/service/sale-service";
-import { formatRiels } from "@/lib/utils";
+import { formatDate, formatRiels } from "@/lib/utils";
 import Loading from "./loading";
 
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
@@ -95,15 +95,7 @@ export default function OrdersPage() {
 
 
 
-  const formatDate = (date: Date) => {
-    return new Date(date).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  };
+ 
 
   return (
     <div className="space-y-6">
