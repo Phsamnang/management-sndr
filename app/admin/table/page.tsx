@@ -216,20 +216,6 @@ export default function TablesPage() {
       name: tableType.label,
     });
   };
-
-  const handleEditTable = (table: Table) => {
-    setEditingTable(table);
-    setNewTable({
-      name: table.name,
-      number: table.number,
-      type: table.type,
-      capacity: table.capacity,
-      section: table.section,
-      status: table.status,
-      description: table.description || "",
-    });
-  };
-
   const handleUpdateTable = () => {
     if (
       !editingTable ||
@@ -672,7 +658,7 @@ export default function TablesPage() {
                           <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => handleEditTable(table)}
+                          
                           >
                             <Edit className="h-4 w-4" />
                           </Button>

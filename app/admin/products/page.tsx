@@ -38,7 +38,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { menuService } from "@/service/menu-service";
 import { all } from "axios";
 import { categoryService } from "@/service/category-service";
-
+import { Switch } from "@/components/ui/switch";
 
 // Category definitions
 // const categories = [
@@ -50,94 +50,9 @@ import { categoryService } from "@/service/category-service";
 //   { id: "drinks", name: "Drinks" },
 // ];
 
-// Table type definitions
-const tableTypes = [
-  { id: "standard", name: "Standard Tables" },
-  { id: "bar", name: "Bar Area" },
-  { id: "patio", name: "Patio/Outdoor" },
-  { id: "private", name: "Private Dining" },
-];
 
-// Initial menu data
-const initialMenuItems = [
-  {
-    id: 1,
-    name: "Classic Burger",
-    category: "mains",
-    prices: [
-      { tableType: "standard", price: "12.99" },
-      { tableType: "bar", price: "10.99" },
-      { tableType: "patio", price: "13.99" },
-      { tableType: "private", price: "15.99" },
-    ],
-  },
-  {
-    id: 2,
-    name: "Margherita Pizza",
-    category: "mains",
-    prices: [
-      { tableType: "standard", price: "14.99" },
-      { tableType: "bar", price: "14.99" },
-      { tableType: "patio", price: "16.99" },
-      { tableType: "private", price: "18.99" },
-    ],
-  },
-  {
-    id: 3,
-    name: "Garlic Bread",
-    category: "appetizers",
-    prices: [
-      { tableType: "standard", price: "5.99" },
-      { tableType: "bar", price: "4.99" },
-      { tableType: "patio", price: "5.99" },
-      { tableType: "private", price: "7.99" },
-    ],
-  },
-  {
-    id: 4,
-    name: "Caesar Salad",
-    category: "appetizers",
-    prices: [
-      { tableType: "standard", price: "8.99" },
-      { tableType: "bar", price: "7.99" },
-      { tableType: "patio", price: "8.99" },
-      { tableType: "private", price: "10.99" },
-    ],
-  },
-  {
-    id: 5,
-    name: "French Fries",
-    category: "sides",
-    prices: [
-      { tableType: "standard", price: "3.99" },
-      { tableType: "bar", price: "3.99" },
-      { tableType: "patio", price: "4.99" },
-      { tableType: "private", price: "5.99" },
-    ],
-  },
-  {
-    id: 6,
-    name: "Chocolate Cake",
-    category: "desserts",
-    prices: [
-      { tableType: "standard", price: "6.99" },
-      { tableType: "bar", price: "6.99" },
-      { tableType: "patio", price: "7.99" },
-      { tableType: "private", price: "8.99" },
-    ],
-  },
-  {
-    id: 7,
-    name: "Soda",
-    category: "drinks",
-    prices: [
-      { tableType: "standard", price: "2.99" },
-      { tableType: "bar", price: "3.99" },
-      { tableType: "patio", price: "3.49" },
-      { tableType: "private", price: "4.99" },
-    ],
-  },
-];
+
+
 
 type Price = {
   tableType: string;
@@ -152,7 +67,6 @@ type MenuItem = {
 };
 
 export default function SimplifiedMenu() {
-  const [menuItems, setMenuItems] = useState<MenuItem[]>(initialMenuItems);
   const [selectedCategory, setSelectedCategory] = useState("1");
   const [selectedTableType, setSelectedTableType] = useState("1");
   const [searchQuery, setSearchQuery] = useState("");
@@ -168,6 +82,7 @@ export default function SimplifiedMenu() {
     const [selectedImageItem, setSelectedImageItem] = useState<MenuItem | null>(
       null
     );
+  const [isCook,setIsCook]=useState(false)
   const useClient = useQueryClient();
   const {categories}=useGetAllCategories();
   const{tableType}=useGetAllTableType();
@@ -225,7 +140,7 @@ export default function SimplifiedMenu() {
     if (newItem.name && newItem.categoryId) {
 
       const newMenuItemWithPrices = {
-        ...newItem,
+        ...newItem,isCooked:isCook
       };
      
       createMenu.mutate(newMenuItemWithPrices);
@@ -270,9 +185,6 @@ export default function SimplifiedMenu() {
   };
 
   // Delete menu item
-  const deleteMenuItem = (id: number) => {
-    setMenuItems(menuItems.filter((item) => item.id !== id));
-  };
 
   // Get price for the selected table type
   const getPriceForTableType = (item: MenuItem, tableType: string) => {
@@ -410,6 +322,10 @@ export default function SimplifiedMenu() {
                       placeholder="Enter menu item name"
                       required
                     />
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Switch checked={isCook} onCheckedChange={()=>setIsCook(!isCook)}/>
+                    <Label htmlFor="available">IsCook</Label>
                   </div>
                   <div className="grid gap-2">
                     <Label htmlFor="category">Category</Label>
@@ -618,7 +534,7 @@ export default function SimplifiedMenu() {
                               variant="ghost"
                               size="icon"
                               className="text-red-500 hover:text-red-700 hover:bg-red-50"
-                              onClick={() => deleteMenuItem(item.id)}
+                          
                             >
                               <X className="h-4 w-4" />
                             </Button>
@@ -723,7 +639,7 @@ export default function SimplifiedMenu() {
                     id="imageUpload"
                     type="file"
                     accept="image/*"
-                    onChange={(e)=>handleImageUpload(e)}
+                    onChange={(e) => handleImageUpload(e)}
                     className="cursor-pointer"
                   />
                   <p className="text-xs text-muted-foreground mt-1">
