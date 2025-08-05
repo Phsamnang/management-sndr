@@ -3,8 +3,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { formatDate } from "@/lib/utils";
 import { forwardRef } from "react";
 
-export const InvoicePrint = forwardRef<HTMLDivElement, { invoice?: any,totalAmount:any,invoiceNo:any,saleDate:any }>(
-  ({ invoice ,totalAmount,invoiceNo,saleDate}, ref) => {
+export const InvoicePrint = forwardRef<HTMLDivElement, { invoice?: any,totalAmount:any,invoiceNo:any,saleDate:any,tableName:any }>(
+  ({ invoice ,totalAmount,invoiceNo,saleDate,tableName}, ref) => {
     const grouped = Object.values(
       invoice.reduce((acc:any, item:any) => {
         const key = `${item.name}_${item.priceAtSale}`;
@@ -28,11 +28,14 @@ export const InvoicePrint = forwardRef<HTMLDivElement, { invoice?: any,totalAmou
             <CardContent className="p-3 print:p-2 text-xs">
               {/* Header */}
               <div className="text-center mb-3">
-                <div className="font-bold text-sm">SN សាច់អាំង(រស់ជាតិដើម​ ត្បូងឃ្មុំ)</div>
+                <div className="font-bold text-sm">
+                  SN សាច់អាំង(រស់ជាតិដើម​ ត្បូងឃ្មុំ)
+                </div>
                 <div className="text-xs text-gray-600">
                   រថភ្លើង, កាកាប២​ ភ្នំពេញ
                 </div>
-                <div className="text-xs text-gray-600">(885) 098704006</div>
+                <div className="text-xs text-gray-600">(+885) 098704006</div>
+                <div className="font-bold text-xs">វិក្ក័យបត្រ/Invoice</div>
               </div>
 
               <div className="border-t border-dashed border-gray-400 my-2"></div>
@@ -42,6 +45,10 @@ export const InvoicePrint = forwardRef<HTMLDivElement, { invoice?: any,totalAmou
                 <div className="flex justify-between">
                   <span>លេខវិក្ក័យបត្រ:</span>
                   <span className="font-mono">{invoiceNo}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>តុ:</span>
+                  <span>{tableName}</span>
                 </div>
                 <div className="flex justify-between">
                   <span>កាលបរិច្ឆេទ:</span>
@@ -89,7 +96,7 @@ export const InvoicePrint = forwardRef<HTMLDivElement, { invoice?: any,totalAmou
                 </div> */}
                 <div className="border-t border-gray-400 pt-1">
                   <div className="flex justify-between font-bold text-sm">
-                    <span>TOTAL:</span>
+                    <span>សរុប:</span>
                     <span className="font-mono">{totalAmount}</span>
                   </div>
                 </div>

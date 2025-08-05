@@ -422,6 +422,7 @@ export default function RestaurantPOS() {
                   totalAmount={getItem?.data?.totalAmount}
                   invoiceNo={getItem?.data?.invoice}
                   saleDate={getItem?.data?.saleDate}
+                  tableName={table.name}
                 />
               )}
             </div>
