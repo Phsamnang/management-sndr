@@ -289,8 +289,8 @@ export default function RestaurantPOS() {
                     key={item.id}
                     className="flex items-center justify-between"
                   >
-                    <div className="flex-1">
-                      <div className="flex items-center justify-between">
+                    <div className={`flex-1 ${item.quantity<=0?'bg-red-600':''}`}>
+                      <div className="flex items-center justify-between ">
                         <span className="font-medium">{item.name}</span>
                         <span>{item.priceAtSale * item.quantity}</span>
                         <Button

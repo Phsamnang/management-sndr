@@ -6,7 +6,7 @@ import { forwardRef } from "react";
 export const InvoicePrint = forwardRef<HTMLDivElement, { invoice?: any,totalAmount:any,invoiceNo:any,saleDate:any,tableName:any }>(
   ({ invoice ,totalAmount,invoiceNo,saleDate,tableName}, ref) => {
     const grouped = Object.values(
-      invoice.reduce((acc:any, item:any) => {
+      invoice.reduce((acc: any, item: any) => {
         const key = `${item.name}_${item.priceAtSale}`;
         if (!acc[key]) {
           acc[key] = { ...item }; // copy original item
@@ -15,7 +15,7 @@ export const InvoicePrint = forwardRef<HTMLDivElement, { invoice?: any,totalAmou
         }
         return acc;
       }, {} as Record<string, (typeof invoice)[number]>)
-    );
+    ).filter((item: any) => item.quantity !== 0);
 
     return (
       <div
