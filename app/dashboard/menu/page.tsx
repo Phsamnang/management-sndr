@@ -64,7 +64,7 @@ export default function RestaurantPOS() {
       // Redirect back to table selection if no table is selected
       router.push("/");
     }
-  }, [searchParams, router]);
+  }, []);
 
   const { data, isLoading } = useQuery({
     queryFn: () => menuService.getAllMenus(Number(tableParam)),
@@ -192,7 +192,6 @@ export default function RestaurantPOS() {
   };
 
   const table = getTableInfo();
-
      const printRef = useRef<HTMLDivElement>(null);
      const handlePrint = useReactToPrint({ 
       contentRef:printRef

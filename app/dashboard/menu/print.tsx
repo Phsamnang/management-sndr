@@ -96,7 +96,7 @@ export const InvoicePrint = forwardRef<HTMLDivElement, { invoice?: any,totalAmou
                 </div> */}
                 <div className="border-t border-gray-400 pt-1">
                   <div className="flex justify-between font-bold text-sm">
-                    <span>សរុប:</span>
+                    <span>សរុបប្រាក់:</span>
                     <span className="font-mono">{totalAmount}</span>
                   </div>
                 </div>
