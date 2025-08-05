@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -23,7 +23,9 @@ import useGetAllTable from "@/hooks/get-all-table";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { menuService } from "@/service/menu-service";
 import { SaleService } from "@/service/sale-service";
-import { log } from "console";
+import { InvoicePrint } from "./print";
+import { useReactToPrint } from "react-to-print";
+
 // Menu item type definition
 type MenuItem = {
   id: number;
@@ -127,23 +129,6 @@ export default function RestaurantPOS() {
     orderFood.mutate(data as any);
   };
 
-  const removeFromCart = (itemId: number) => {
-    setCart((prevCart) => {
-      const existingItem = prevCart.find((item) => item.id === itemId);
-
-      if (existingItem && existingItem.quantity > 1) {
-        return prevCart.map((item) =>
-          item.id === itemId ? { ...item, quantity: item.quantity - 1 } : item
-        );
-      } else {
-        return prevCart.filter((item) => item.id !== itemId);
-      }
-    });
-  };
-
-  const getCartTotal = () => {
-    return cart.reduce((total, item) => total + item.price * item.quantity, 0);
-  };
 
   const getCartItemCount = () => {
     return cart.reduce((count, item) => count + item.quantity, 0);
@@ -151,6 +136,8 @@ export default function RestaurantPOS() {
 
   const renderMenuItem = (item: MenuItem) => {
     const cartItem = cart?.find((cartItem) => cartItem.id === item.id);
+
+   
 
     return (
       <Card key={item.id} className="mb-3">
@@ -199,66 +186,17 @@ export default function RestaurantPOS() {
     );
   };
 
-  const handlePrintReceipt = () => {
-    if (getItem?.data?.saleItemResponse.length > 0) {
-      const table = tableInfo?.find((t: { id: number }) => t.id === tableId);
-
-      // Create receipt content
-      const receiptContent = `
-        RESTAURANT RECEIPT
-        -----------------
-        ${new Date().toLocaleString()}
-        
-        Table: ${table ? `${table.name} (${table.category})` : tableId}
-        
-        ${getItem?.data?.saleItemResponse
-          ?.map(
-            (item: any) =>
-              `${item.name} x${item.quantity} $${
-                item.priceAtSale * item.quantity
-              }`
-          )
-          .join("\n")}
-    
-        Total: $${getItem?.data?.totalAmount}
-        
-        Payment Method: ${paymentType ? paymentType.toUpperCase() : "N/A"}
-      `;
-
-      // Create a new window for printing
-      const printWindow = window.open("", "_blank");
-      if (printWindow) {
-        printWindow.document.write(`
-          <html>
-            <head>
-              <title>Receipt</title>
-              <style>
-                body { font-family: monospace; padding: 20px; }
-                pre { white-space: pre-wrap; }
-              </style>
-            </head>
-            <body>
-              <pre>${receiptContent}</pre>
-              <script>
-                window.onload = function() {
-                  window.print();
-                  setTimeout(function() { window.close(); }, 500);
-                }
-              </script>
-            </body>
-          </html>
-        `);
-        printWindow.document.close();
-      }
-    }
-  };
-
   const getTableInfo = () => {
     if (!tableId) return null;
     return tableInfo?.find((t: { id: number }) => t.id === tableId);
   };
 
   const table = getTableInfo();
+
+     const printRef = useRef<HTMLDivElement>(null);
+     const handlePrint = useReactToPrint({ 
+      contentRef:printRef
+      });
 
   return (
     <div className="flex h-screen bg-gray-50">
@@ -456,7 +394,7 @@ export default function RestaurantPOS() {
                 className="bg-white text-green-600 border-green-600 hover:bg-green-50"
                 size="lg"
                 disabled={getItem?.data?.saleItemResponse?.length === 0}
-                onClick={handlePrintReceipt}
+                onClick={handlePrint}
               >
                 Print Receipt
               </Button>
@@ -475,6 +413,17 @@ export default function RestaurantPOS() {
               >
                 Checkout
               </Button>
+            </div>
+            <div style={{}}>
+              {getItem?.data?.saleItemResponse.length > 0 && (
+                <InvoicePrint
+                  ref={printRef}
+                  invoice={getItem.data.saleItemResponse}
+                  totalAmount={getItem?.data?.totalAmount}
+                  invoiceNo={getItem?.data?.invoice}
+                  saleDate={getItem?.data?.saleDate}
+                />
+              )}
             </div>
           </div>
         </div>
