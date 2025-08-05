@@ -8,7 +8,7 @@ const {data,isLoading}=useQuery({
   })
   return {
     tableType:data,
-    isLoading:isLoading
+    tableTypeLoading:isLoading
   }
 }
 

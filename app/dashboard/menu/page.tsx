@@ -30,6 +30,7 @@ type MenuItem = {
   name: string;
   price: number;
   category: string;
+  image: string;
 };
 
 type CartItem = MenuItem & {
@@ -46,9 +47,9 @@ export default function RestaurantPOS() {
   const [tableId, setTableId] = useState<number | null>(null);
   const [activeCategory, setActiveCategory] = useState<string>("");
   const { tableInfo } = useGetAllTable();
-  const [qty,setQty]=useState(0)
-  const [saleId,setSaleId]=useState(0)
-  
+  const [qty, setQty] = useState(0);
+  const [saleId, setSaleId] = useState(0);
+
   const useClient = useQueryClient();
   const tableParam = searchParams.get("table");
 
@@ -63,51 +64,49 @@ export default function RestaurantPOS() {
     }
   }, [searchParams, router]);
 
-
-  const { data,isLoading } = useQuery({
+  const { data, isLoading } = useQuery({
     queryFn: () => menuService.getAllMenus(Number(tableParam)),
     queryKey: ["menus", tableParam],
   });
 
-    const sales = useQuery({
-      queryFn: () => SaleService.getSale(Number(tableParam)),
-      queryKey: ["sale", tableParam],
-    });
+  const sales = useQuery({
+    queryFn: () => SaleService.getSale(Number(tableParam)),
+    queryKey: ["sale", tableParam],
+  });
 
-  const orderFood=useMutation({
-    mutationFn:(data)=>SaleService.orderFood(data),
-    onSuccess:()=>{
+  const orderFood = useMutation({
+    mutationFn: (data) => SaleService.orderFood(data),
+    onSuccess: () => {
       useClient.invalidateQueries({ queryKey: ["saleItems"] });
-    }
-  })  
+    },
+  });
 
-    const removeItem = useMutation({
-      mutationFn: (id:number) => SaleService.removeItem(id),
-      onSuccess: () => {
-        useClient.invalidateQueries({ queryKey: ["saleItems"] });
-      },
-    });  
+  const removeItem = useMutation({
+    mutationFn: (id: number) => SaleService.removeItem(id),
+    onSuccess: () => {
+      useClient.invalidateQueries({ queryKey: ["saleItems"] });
+    },
+  });
 
-    const payment=useMutation({
-      mutationFn:(data:any)=>SaleService.salePayment(data),
-      onSuccess:()=>{
-        router.push("/")
-      }
-    });
+  const payment = useMutation({
+    mutationFn: (data: any) => SaleService.salePayment(data),
+    onSuccess: () => {
+      router.push("/");
+    },
+  });
 
-  useEffect(()=>{
-    setSaleId(sales?.data?.id)
-  },[sales?.data])
+  useEffect(() => {
+    setSaleId(sales?.data?.id);
+  }, [sales?.data]);
 
-
-    const getItem = useQuery({
-      queryFn: () => SaleService.getSaleById(saleId),
-      queryKey: ["saleItems",tableParam],
-    });
+  const getItem = useQuery({
+    queryFn: () => SaleService.getSaleById(saleId),
+    queryKey: ["saleItems", tableParam],
+  });
 
   // Get unique categories from menu items
   const categories = Array.from(
-    new Set(data?.map((item:MenuItem) => item.category))
+    new Set(data?.map((item: MenuItem) => item.category))
   ).sort();
 
   useEffect(() => {
@@ -117,15 +116,15 @@ export default function RestaurantPOS() {
     }
   }, [categories, activeCategory]);
 
-  const addToCart = (menusId:number,qty:number) => {
-       const data={
-        menusId:menusId,
-        saleId:sales?.data?.id,
-        qty:qty,
-        tableId:tableId
-       }
+  const addToCart = (menusId: number, qty: number) => {
+    const data = {
+      menusId: menusId,
+      saleId: sales?.data?.id,
+      qty: qty,
+      tableId: tableId,
+    };
 
-       orderFood.mutate(data as any);
+    orderFood.mutate(data as any);
   };
 
   const removeFromCart = (itemId: number) => {
@@ -145,11 +144,10 @@ export default function RestaurantPOS() {
   const getCartTotal = () => {
     return cart.reduce((total, item) => total + item.price * item.quantity, 0);
   };
- 
+
   const getCartItemCount = () => {
     return cart.reduce((count, item) => count + item.quantity, 0);
   };
-
 
   const renderMenuItem = (item: MenuItem) => {
     const cartItem = cart?.find((cartItem) => cartItem.id === item.id);
@@ -159,7 +157,7 @@ export default function RestaurantPOS() {
         <CardContent className="p-3">
           <div className="flex items-center gap-3">
             <img
-              src={item?.img || "/placeholder.svg"}
+              src={item?.image || "/placeholder.svg"}
               alt={item?.name}
               className="h-20 w-20 rounded-md object-cover"
             />
@@ -203,7 +201,7 @@ export default function RestaurantPOS() {
 
   const handlePrintReceipt = () => {
     if (getItem?.data?.saleItemResponse.length > 0) {
-      const table = tableInfo?.find((t:{id:number}) => t.id === tableId);
+      const table = tableInfo?.find((t: { id: number }) => t.id === tableId);
 
       // Create receipt content
       const receiptContent = `
@@ -213,11 +211,12 @@ export default function RestaurantPOS() {
         
         Table: ${table ? `${table.name} (${table.category})` : tableId}
         
-        ${getItem?.data?.saleItemResponse?.map(
-            (item:any) =>
-              `${item.name} x${item.quantity} $${(
+        ${getItem?.data?.saleItemResponse
+          ?.map(
+            (item: any) =>
+              `${item.name} x${item.quantity} $${
                 item.priceAtSale * item.quantity
-              )}`
+              }`
           )
           .join("\n")}
     
@@ -256,7 +255,7 @@ export default function RestaurantPOS() {
 
   const getTableInfo = () => {
     if (!tableId) return null;
-    return tableInfo?.find((t:{id:number}) => t.id === tableId);
+    return tableInfo?.find((t: { id: number }) => t.id === tableId);
   };
 
   const table = getTableInfo();
@@ -467,14 +466,12 @@ export default function RestaurantPOS() {
                 disabled={
                   getItem?.data?.saleItemResponse.length === 0 || !paymentType
                 }
-
-                onClick={()=>{
+                onClick={() => {
                   payment.mutate({
                     saleId: saleId,
-                    paymentMethod:paymentType
+                    paymentMethod: paymentType,
                   });
                 }}
-
               >
                 Checkout
               </Button>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Table,
@@ -39,6 +39,7 @@ import { menuService } from "@/service/menu-service";
 import { all } from "axios";
 import { categoryService } from "@/service/category-service";
 import { Switch } from "@/components/ui/switch";
+import MenusLoading from "./loading";
 
 // Category definitions
 // const categories = [
@@ -49,10 +50,6 @@ import { Switch } from "@/components/ui/switch";
 //   { id: "desserts", name: "Desserts" },
 //   { id: "drinks", name: "Drinks" },
 // ];
-
-
-
-
 
 type Price = {
   tableType: string;
@@ -67,6 +64,9 @@ type MenuItem = {
 };
 
 export default function SimplifiedMenu() {
+  const { categories, categoryLoading } = useGetAllCategories();
+  const { tableType, tableTypeLoading } = useGetAllTableType();
+
   const [selectedCategory, setSelectedCategory] = useState("1");
   const [selectedTableType, setSelectedTableType] = useState("1");
   const [searchQuery, setSearchQuery] = useState("");
@@ -74,59 +74,56 @@ export default function SimplifiedMenu() {
   const [newItem, setNewItem] = useState({ name: "", categoryId: "" });
   const [isPriceDialogOpen, setIsPriceDialogOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
-  const [newPrice, setNewPrice] = useState("");
+  const [newPrice, setNewPrice] = useState('0');
   const [newPriceTableType, setNewPriceTableType] = useState("1");
-   const [isCategoryDialogOpen, setIsCategoryDialogOpen] = useState(false);
-   const [newCategory, setNewCategory] = useState({ name: "" });
-    const [isImageDialogOpen, setIsImageDialogOpen] = useState(false);
-    const [selectedImageItem, setSelectedImageItem] = useState<MenuItem | null>(
-      null
-    );
-  const [isCook,setIsCook]=useState(false)
+  const [isCategoryDialogOpen, setIsCategoryDialogOpen] = useState(false);
+  const [newCategory, setNewCategory] = useState({ name: "" });
+  const [isImageDialogOpen, setIsImageDialogOpen] = useState(false);
+  const [selectedImageItem, setSelectedImageItem] = useState<MenuItem | null>(
+    null
+  );
+  const [isCook, setIsCook] = useState(false);
   const useClient = useQueryClient();
-  const {categories}=useGetAllCategories();
-  const{tableType}=useGetAllTableType();
-  const{data}=useQuery({
-    queryKey:['menusPrice'],
-    queryFn:()=>menuService.getAllMenusWithprices()
-  })
+  const { data } = useQuery({
+    queryKey: ["menusPrice"],
+    queryFn: () => menuService.getAllMenusWithprices(),
+  });
 
-  const createMenu=useMutation({
-    mutationFn:(data:any)=>menuService.createMenu(data),
-    onSuccess:()=>{
-       setIsAddDialogOpen(false);
-       setNewItem({ name: "", categoryId: "" });
-       useClient.invalidateQueries({ queryKey: ["menusPrice"] });
-    }
-  })
-   const createCategory = useMutation({
-     mutationFn: (data: any) => categoryService.createCategory(data),
-     onSuccess: () => {
-       setIsCategoryDialogOpen(false);
-       setNewCategory({name:''})
-       useClient.invalidateQueries({ queryKey: ["categories"] });
-     },
-   });
+  const createMenu = useMutation({
+    mutationFn: (data: any) => menuService.createMenu(data),
+    onSuccess: () => {
+      setIsAddDialogOpen(false);
+      setNewItem({ name: "", categoryId: "" });
+      useClient.invalidateQueries({ queryKey: ["menusPrice"] });
+    },
+  });
+  const createCategory = useMutation({
+    mutationFn: (data: any) => categoryService.createCategory(data),
+    onSuccess: () => {
+      setIsCategoryDialogOpen(false);
+      setNewCategory({ name: "" });
+      useClient.invalidateQueries({ queryKey: ["categories"] });
+    },
+  });
 
-      const updateMenuPrice = useMutation({
-        mutationFn: (data: any) => menuService.updatePrice(data),
-        onSuccess: () => {
-          setIsPriceDialogOpen(false);
-          useClient.invalidateQueries({ queryKey: ["menusPrice"] });
-        },
-      });
+  const updateMenuPrice = useMutation({
+    mutationFn: (data: any) => menuService.updatePrice(data),
+    onSuccess: () => {
+      setIsPriceDialogOpen(false);
+      useClient.invalidateQueries({ queryKey: ["menusPrice"] });
+    },
+  });
 
-        const updateMenuImage = useMutation({
-          mutationFn:(data:any) => menuService.updateImage(data),
-          onSuccess: () => {
-            setIsImageDialogOpen(false);
-            useClient.invalidateQueries({ queryKey: ["menusPrice"] });
-          },
-        });
-
+  const updateMenuImage = useMutation({
+    mutationFn: (data: any) => menuService.updateImage(data),
+    onSuccess: () => {
+      setIsImageDialogOpen(false);
+      useClient.invalidateQueries({ queryKey: ["menusPrice"] });
+    },
+  });
 
   // Filter menu items based on selected category and search query
-  const filteredItems = data?.filter((item :any) => {
+  const filteredItems = data?.filter((item: any) => {
     const matchesCategory =
       selectedCategory === "1" || item.category === selectedCategory;
     const matchesSearch = item.name
@@ -138,24 +135,23 @@ export default function SimplifiedMenu() {
   // Add new menu item
   const handleAddMenuItem = () => {
     if (newItem.name && newItem.categoryId) {
-
       const newMenuItemWithPrices = {
-        ...newItem,isCooked:isCook
+        ...newItem,
+        isCooked: isCook,
       };
-     
+
       createMenu.mutate(newMenuItemWithPrices);
-     
     }
   };
 
-   const handleAddCategory = () => {
-     if (newCategory.name) {
-       const request = {
-         ...newCategory
-       };
-       createCategory.mutate(request);
-     }
-   };
+  const handleAddCategory = () => {
+    if (newCategory.name) {
+      const request = {
+        ...newCategory,
+      };
+      createCategory.mutate(request);
+    }
+  };
 
   // Open price dialog for an item
   const openPriceDialog = (item: MenuItem) => {
@@ -172,11 +168,10 @@ export default function SimplifiedMenu() {
   // Update price for an item
   const updatePrice = () => {
     if (selectedItem && newPrice && newPriceTableType) {
-      
       const request = {
         menuId: selectedItem.id,
         price: newPrice,
-        tableTypeId:newPriceTableType
+        tableTypeId: newPriceTableType,
       };
 
       updateMenuPrice.mutate(request);
@@ -192,7 +187,6 @@ export default function SimplifiedMenu() {
     return priceObj ? priceObj.price : "0.00";
   };
 
-
   const openImageDialog = (item: MenuItem) => {
     setSelectedImageItem(item);
     console.log(item);
@@ -203,14 +197,11 @@ export default function SimplifiedMenu() {
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file && selectedImageItem) {
-      const request={
-        menuId:selectedImageItem.id,
-        image:file
-      }
-
-      console.log(request);
-
-        updateMenuImage.mutate(request);
+      const request = {
+        menuId: selectedImageItem.id,
+        image: file,
+      };
+      updateMenuImage.mutate(request);
       // Create a URL for the uploaded file
       // const imageUrl = URL.createObjectURL(file);
 
@@ -221,12 +212,12 @@ export default function SimplifiedMenu() {
       //   )
       // );
 
-    //  
+      //
       setSelectedImageItem(null);
     }
   };
 
-
+  if (categoryLoading || tableTypeLoading) return <MenusLoading />;
 
   return (
     <div className="flex min-h-screen flex-col bg-gray-50">
@@ -324,7 +315,10 @@ export default function SimplifiedMenu() {
                     />
                   </div>
                   <div className="flex items-center space-x-2">
-                    <Switch checked={isCook} onCheckedChange={()=>setIsCook(!isCook)}/>
+                    <Switch
+                      checked={isCook}
+                      onCheckedChange={() => setIsCook(!isCook)}
+                    />
                     <Label htmlFor="available">IsCook</Label>
                   </div>
                   <div className="grid gap-2">
@@ -534,7 +528,6 @@ export default function SimplifiedMenu() {
                               variant="ghost"
                               size="icon"
                               className="text-red-500 hover:text-red-700 hover:bg-red-50"
-                          
                             >
                               <X className="h-4 w-4" />
                             </Button>

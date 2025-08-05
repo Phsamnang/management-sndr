@@ -8,7 +8,7 @@ const {data,isLoading}=useQuery({
   })
   return {
     categories:data,
-    isLoading:isLoading
+    categoryLoading:isLoading
   }
 }
 
