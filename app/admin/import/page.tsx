@@ -59,6 +59,9 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { importService } from "@/service/import-service";
+import useGetAllProducts from "@/hooks/get-all-products";
 
 type Product = {
   id: string;
@@ -91,9 +94,28 @@ export default function ImportProductsPage() {
   const [currentImportSession, setCurrentImportSession] =
     useState<ImportSession | null>(null);
   const [importName, setImportName] = useState("");
-  const [products, setProducts] = useState<Product[]>([]);
+  // const [products, setProducts] = useState<Product[]>([]);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [showPreview, setShowPreview] = useState(false);
+ const [dateFilter, setDateFilter] = useState<string>(new Date().toISOString().split("T")[0]);
+  const useClient=useQueryClient()
+  const createImport=useMutation({
+    mutationFn:(data:any)=>importService.createImport(data),
+    onSuccess:()=>{
+      useClient.invalidateQueries({queryKey:['getImport']})
+    }
+  })
+
+  const getImport=useQuery({
+    queryFn:()=>importService.getImportByDate(dateFilter),
+    queryKey:['getImport']
+
+  })
+
+  const {products}=useGetAllProducts();
+
+
+
   const [formData, setFormData] = useState({
     name: "",
     qty: "",
@@ -200,7 +222,7 @@ export default function ImportProductsPage() {
     if (currency === "KHR") {
       return `${symbol}${price.toLocaleString()}`;
     } else {
-      return `${symbol}${price.toFixed(2)}`;
+      return `${symbol}`;
     }
   };
 
@@ -243,37 +265,46 @@ export default function ImportProductsPage() {
     setImportSessions([...importSessions, newImportSession]);
     setCurrentImportSession(newImportSession);
     setImportName("");
-    setShowImportForm(true);
+   
   };
 
-  const addProduct = () => {
-    if (validateForm()) {
-      const qty = parseInt(formData.qty);
-      const price = parseFloat(formData.price);
-      const total = qty * price;
 
-      const newProduct: Product = {
-        id: `product-${Date.now()}`,
-        name: formData.name.trim(),
-        qty: qty,
-        price: price,
-        currency: formData.currency,
-        total: total,
-        paymentStatus: formData.paymentStatus,
-      };
-
-      setProducts([...products, newProduct]);
-      setFormData({
-        name: "",
-        qty: "",
-        price: "",
-        currency: "USD",
-        paymentStatus: "Unpaid",
-      });
-      setErrors({ name: "", qty: "", price: "" });
-      setSelectedExistingProduct("");
+  useEffect(() => {
+    if (getImport?.data) {
+      setShowImportForm(true);
+    }else{
+      setShowImportForm(false)
     }
-  };
+  }, [getImport?.data]);
+
+  // const addProduct = () => {
+  //   if (validateForm()) { 
+  //     const qty = parseInt(formData.qty);
+  //     const price = parseFloat(formData.price);
+  //     const total = qty * price;
+
+  //     const newProduct: Product = {
+  //       id: `product-${Date.now()}`,
+  //       name: formData.name.trim(),
+  //       qty: qty,
+  //       price: price,
+  //       currency: formData.currency,
+  //       total: total,
+  //       paymentStatus: formData.paymentStatus,
+  //     };
+
+  //     setProducts([...products, newProduct]);
+  //     setFormData({
+  //       name: "",
+  //       qty: "",
+  //       price: "",
+  //       currency: "USD",
+  //       paymentStatus: "Unpaid",
+  //     });
+  //     setErrors({ name: "", qty: "", price: "" });
+  //     setSelectedExistingProduct("");
+  //   }
+  // };
 
   const selectExistingProduct = (product: ExistingProduct) => {
     setFormData({
@@ -286,93 +317,93 @@ export default function ImportProductsPage() {
     setOpen(false);
   };
 
-  const removeProduct = (id: string) => {
-    setProducts(products.filter((p) => p.id !== id));
-  };
+  // const removeProduct = (id: string) => {
+  //   setProducts(products.filter((p) => p.id !== id));
+  // };
 
-  const updateProductPaymentStatus = (
-    id: string,
-    newStatus: "Unpaid" | "Paid"
-  ) => {
-    setProducts(
-      products.map((product) =>
-        product.id === id ? { ...product, paymentStatus: newStatus } : product
-      )
-    );
-  };
+  // const updateProductPaymentStatus = (
+  //   id: string,
+  //   newStatus: "Unpaid" | "Paid"
+  // ) => {
+  //   setProducts(
+  //     products.map((product) =>
+  //       product.id === id ? { ...product, paymentStatus: newStatus } : product
+  //     )
+  //   );
+  // };
 
-  const saveAllProducts = () => {
-    if (products.length > 0) {
-      alert(`Successfully saved ${products.length} products to inventory!`);
-      setProducts([]);
-      setCurrentImportSession(null);
-      setShowImportForm(false);
+  // const saveAllProducts = () => {
+  //   if (products.length > 0) {
+  //     alert(`Successfully saved ${products.length} products to inventory!`);
+  //     setProducts([]);
+  //     setCurrentImportSession(null);
+  //     setShowImportForm(false);
 
-      // Update the import session status to completed
-      if (currentImportSession) {
-        setImportSessions(
-          importSessions.map((session) =>
-            session.id === currentImportSession.id
-              ? { ...session, status: "Completed" }
-              : session
-          )
-        );
-      }
-    }
-  };
+  //     // Update the import session status to completed
+  //     if (currentImportSession) {
+  //       setImportSessions(
+  //         importSessions.map((session) =>
+  //           session.id === currentImportSession.id
+  //             ? { ...session, status: "Completed" }
+  //             : session
+  //         )
+  //       );
+  //     }
+  //   }
+  // };
 
-  const clearAll = () => {
-    setProducts([]);
-    setFormData({
-      name: "",
-      qty: "",
-      price: "",
-      currency: "USD",
-      paymentStatus: "Unpaid",
-    });
-    setErrors({ name: "", qty: "", price: "" });
-    setSelectedExistingProduct("");
-  };
+  // const clearAll = () => {
+  //   setProducts([]);
+  //   setFormData({
+  //     name: "",
+  //     qty: "",
+  //     price: "",
+  //     currency: "USD",
+  //     paymentStatus: "Unpaid",
+  //   });
+  //   setErrors({ name: "", qty: "", price: "" });
+  //   setSelectedExistingProduct("");
+  // };
 
-  const cancelImport = () => {
-    if (products.length > 0) {
-      if (
-        !confirm(
-          "Are you sure you want to cancel this import? All products will be lost."
-        )
-      ) {
-        return;
-      }
-    }
+  // const cancelImport = () => {
+  //   if (products.length > 0) {
+  //     if (
+  //       !confirm(
+  //         "Are you sure you want to cancel this import? All products will be lost."
+  //       )
+  //     ) {
+  //       return;
+  //     }
+  //   }
 
-    setProducts([]);
-    setCurrentImportSession(null);
-    setShowImportForm(false);
-  };
+  //   setProducts([]);
+  //   setCurrentImportSession(null);
+  //   setShowImportForm(false);
+  // };
 
-  const getTotalValue = () => {
-    // Group by currency and calculate totals
-    const totals = products.reduce((acc, product) => {
-      if (!acc[product.currency]) {
-        acc[product.currency] = 0;
-      }
-      acc[product.currency] += product.total;
-      return acc;
-    }, {} as Record<string, number>);
+  // const getTotalValue = () => {
+  //   // Group by currency and calculate totals
+  //   const totals = products.reduce((acc, product) => {
+  //     if (!acc[product.currency]) {
+  //       acc[product.currency] = 0;
+  //     }
+  //     acc[product.currency] += product.total;
+  //     return acc;
+  //   }, {} as Record<string, number>);
 
-    return totals;
-  };
+  //   return totals;
+  // };
 
-  const getTotalQuantity = () => {
-    return products.reduce((sum, product) => sum + product.qty, 0);
-  };
+  // const getTotalQuantity = () => {
+  //   return products.reduce((sum, product) => sum + product.qty, 0);
+  // };
 
-  const getPaidUnpaidCounts = () => {
-    return products.reduce((acc, product) => {
-      acc[product.paymentStatus] = (acc[product.paymentStatus] || 0) + 1;
-      return acc;
-    }, {} as Record<"Unpaid" | "Paid", number>);
-  };
+  // const getPaidUnpaidCounts = () => {
+  //   return products.reduce((acc, product) => {
+  //     acc[product.paymentStatus] = (acc[product.paymentStatus] || 0) + 1;
+  //     return acc;
+  //   }, {} as Record<"Unpaid" | "Paid", number>);
+  // };
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -402,17 +433,6 @@ export default function ImportProductsPage() {
               ? `Import: ${currentImportSession?.name}`
               : "Product Imports"}
           </h1>
-          <div className="w-32">
-            {showImportForm && (
-              <Button
-                variant="outline"
-                onClick={cancelImport}
-                className="text-red-600"
-              >
-                Cancel Import
-              </Button>
-            )}
-          </div>
         </div>
       </header>
 
@@ -440,7 +460,11 @@ export default function ImportProductsPage() {
                   </div>
                   <div className="flex items-end">
                     <Button
-                      onClick={createImportSession}
+                      onClick={() =>
+                        createImport.mutate({
+                          importDate: new Date(),
+                        })
+                      }
                       className="w-full bg-green-600 hover:bg-green-700"
                     >
                       <Plus className="mr-2 h-4 w-4" />
@@ -589,13 +613,13 @@ export default function ImportProductsPage() {
                               </div>
                             </CommandEmpty>
                             <CommandGroup heading="Existing Products">
-                              {existingProducts
-                                .filter((product) =>
+                              {products
+                                ?.filter((product: any) =>
                                   product.name
                                     .toLowerCase()
                                     .includes(formData.name.toLowerCase())
                                 )
-                                .map((product) => (
+                                .map((product: any) => (
                                   <CommandItem
                                     key={product.id}
                                     value={product.name}
@@ -736,10 +760,7 @@ export default function ImportProductsPage() {
                         </span>
                       )}
                   </div>
-                  <Button
-                    onClick={addProduct}
-                    className="bg-green-600 hover:bg-green-700"
-                  >
+                  <Button className="bg-green-600 hover:bg-green-700">
                     <Plus className="mr-2 h-4 w-4" />
                     Add Product
                   </Button>
@@ -748,11 +769,11 @@ export default function ImportProductsPage() {
             </Card>
 
             {/* Product Statistics */}
-            {products.length > 0 && (
+            {products?.importDetail?.length > 0 && (
               <div className="grid gap-4 md:grid-cols-4">
                 <Card>
                   <CardContent className="pt-6">
-                    <div className="text-2xl font-bold">{products.length}</div>
+                    <div className="text-2xl font-bold">{products?.importDetail?.length}</div>
                     <p className="text-xs text-muted-foreground">
                       Total Products
                     </p>
@@ -760,38 +781,32 @@ export default function ImportProductsPage() {
                 </Card>
                 <Card>
                   <CardContent className="pt-6">
-                    <div className="text-2xl font-bold text-blue-600">
-                      {getTotalQuantity()}
-                    </div>
+                    <div className="text-2xl font-bold text-blue-600"></div>
                     <p className="text-xs text-muted-foreground">
                       Total Quantity
                     </p>
                   </CardContent>
                 </Card>
-                {Object.entries(getTotalValue()).map(([currency, total]) => (
+                {/* {Object.entries(getTotalValue()).map(([currency, total]) => (
                   <Card key={currency}>
                     <CardContent className="pt-6">
                       <div className="text-2xl font-bold text-green-600">
-                        {formatPrice(total, currency)}
+                      
                       </div>
                       <p className="text-xs text-muted-foreground">
                         Total Value ({currency})
                       </p>
                     </CardContent>
                   </Card>
-                ))}
+                ))} */}
                 <Card>
                   <CardContent className="pt-6">
                     <div className="flex items-center gap-2">
-                      <span className="text-2xl font-bold text-red-600">
-                        {getPaidUnpaidCounts().Unpaid || 0}
-                      </span>
+                      <span className="text-2xl font-bold text-red-600"></span>
                       <span className="text-sm text-muted-foreground">
                         Unpaid
                       </span>
-                      <span className="text-2xl font-bold text-green-600 ml-4">
-                        {getPaidUnpaidCounts().Paid || 0}
-                      </span>
+                      <span className="text-2xl font-bold text-green-600 ml-4"></span>
                       <span className="text-sm text-muted-foreground">
                         Paid
                       </span>
@@ -805,19 +820,14 @@ export default function ImportProductsPage() {
             )}
 
             {/* Products List */}
-            {products.length > 0 && (
+            {products?.importDetail?.length > 0 && (
               <Card>
                 <CardHeader>
                   <div className="flex items-center justify-between">
                     <CardTitle>Products List</CardTitle>
                     <div className="flex gap-2">
-                      <Button variant="outline" onClick={clearAll}>
-                        Clear All
-                      </Button>
-                      <Button
-                        onClick={saveAllProducts}
-                        className="bg-green-600 hover:bg-green-700"
-                      >
+                      <Button variant="outline">Clear All</Button>
+                      <Button className="bg-green-600 hover:bg-green-700">
                         <Save className="mr-2 h-4 w-4" />
                         Save All Products
                       </Button>
@@ -839,7 +849,7 @@ export default function ImportProductsPage() {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {products.map((product) => (
+                        {products.map((product: any) => (
                           <TableRow key={product.id}>
                             <TableCell className="font-medium">
                               {product.name}
@@ -866,15 +876,7 @@ export default function ImportProductsPage() {
                               {formatPrice(product.total, product.currency)}
                             </TableCell>
                             <TableCell>
-                              <Select
-                                value={product.paymentStatus}
-                                onValueChange={(newStatus: "Unpaid" | "Paid") =>
-                                  updateProductPaymentStatus(
-                                    product.id,
-                                    newStatus
-                                  )
-                                }
-                              >
+                              <Select value={product.paymentStatus}>
                                 <SelectTrigger
                                   className={cn(
                                     "w-[120px] h-8",
@@ -924,7 +926,6 @@ export default function ImportProductsPage() {
                                 <Button
                                   variant="ghost"
                                   size="sm"
-                                  onClick={() => removeProduct(product.id)}
                                   className="text-red-600 hover:text-red-700"
                                 >
                                   <Trash2 className="h-4 w-4" />
@@ -940,16 +941,16 @@ export default function ImportProductsPage() {
                   {/* Summary Row */}
                   <div className="border-t mt-4 pt-4">
                     <div className="flex justify-between items-center font-semibold">
-                      <span>Total: {products.length} products</span>
-                      <span>Quantity: {getTotalQuantity()}</span>
+                      <span>Total: {products?.length} products</span>
+                      <span>Quantity:</span>
                       <div className="flex gap-4">
-                        {Object.entries(getTotalValue()).map(
+                        {/* {Object.entries(getTotalValue()).map(
                           ([currency, total]) => (
                             <span key={currency} className="text-green-600">
-                              {currency}: {formatPrice(total, currency)}
+                             
                             </span>
                           )
-                        )}
+                        )} */}
                       </div>
                     </div>
                   </div>
@@ -958,7 +959,7 @@ export default function ImportProductsPage() {
             )}
 
             {/* Empty State */}
-            {products.length === 0 && (
+            {products?.length === 0 && (
               <Card>
                 <CardContent className="pt-6">
                   <div className="text-center py-12">
