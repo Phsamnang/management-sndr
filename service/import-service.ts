@@ -1,8 +1,9 @@
 import { http } from "@/app/utils/http"
 
-const ServiceId={
-    IMPORT:"/import"
-}
+const ServiceId = {
+  IMPORT: "/import",
+  IMPORT_PRODUCT: "/import/product",
+};
 
 const createImport=async(data:any)=>{
     const rs=await http.post(ServiceId.IMPORT+'/create',data);
@@ -18,8 +19,20 @@ const getImportByDate=async(date:string)=>{
     return rs.data;
 }
 
+const updateImportPaymentStatus=async(data:any)=>{
+  const rs = await http.put(ServiceId.IMPORT + "/update-payment-status",data);
+  return rs.data;
+}
+
+const createImportDetail=async(data:any)=>{
+  const rs=await http.post(ServiceId.IMPORT_PRODUCT,data);
+  return rs.data;
+}
+
 
 export const importService={
     createImport,
-    getImportByDate
+    getImportByDate,
+    updateImportPaymentStatus,
+    createImportDetail
 }

@@ -114,14 +114,34 @@ export default function ImportProductsPage() {
 
   const {products}=useGetAllProducts();
 
+  const updatePaymentStatus=useMutation({
+    mutationFn:(data:any)=>importService.updateImportPaymentStatus(data),
+    onSuccess:()=>{
+      useClient.invalidateQueries({ queryKey: ["getImport"] });
+    }
+  })
 
+
+   const createImportDetails = useMutation({
+     mutationFn: (data: any) => importService.createImportDetail(data),
+     onSuccess: () => {
+       useClient.invalidateQueries({ queryKey: ["getImport"] });
+           setFormData({
+             name: "",
+             qty: "",
+             price: "",
+             currency: "USD",
+             paymentStatus: "UNPAID",
+           });
+     },
+   });
 
   const [formData, setFormData] = useState({
     name: "",
     qty: "",
     price: "",
     currency: "USD",
-    paymentStatus: "Unpaid" as "Unpaid" | "Paid",
+    paymentStatus: "UNPAID" as "UNPAID" | "PAID",
   });
   const [errors, setErrors] = useState({
     name: "",
@@ -211,8 +231,8 @@ export default function ImportProductsPage() {
   ];
 
   const paymentStatuses = [
-    { value: "Unpaid", label: "Unpaid" },
-    { value: "Paid", label: "Paid" },
+    { value: "UNPAID", label: "UNPAID" },
+    { value: "PAID", label: "PAID" },
   ];
 
   const formatPrice = (price: number, currency: string) => {
@@ -220,9 +240,9 @@ export default function ImportProductsPage() {
     const symbol = currencyData?.symbol || "$";
 
     if (currency === "KHR") {
-      return `${symbol}${price.toLocaleString()}`;
+      return `${price} ${symbol}`;
     } else {
-      return `${symbol}`;
+      return `${symbol}${price}`;
     }
   };
 
@@ -267,7 +287,6 @@ export default function ImportProductsPage() {
     setImportName("");
    
   };
-
 
   useEffect(() => {
     if (getImport?.data) {
@@ -323,9 +342,9 @@ export default function ImportProductsPage() {
 
   // const updateProductPaymentStatus = (
   //   id: string,
-  //   newStatus: "Unpaid" | "Paid"
+  //   newStatus: "UNPAID" | "PAID"
   // ) => {
-  //   setProducts(
+  //   setPro ducts(
   //     products.map((product) =>
   //       product.id === id ? { ...product, paymentStatus: newStatus } : product
   //     )
@@ -724,7 +743,7 @@ export default function ImportProductsPage() {
                     <Label htmlFor="paymentStatus">Payment Status</Label>
                     <Select
                       value={formData.paymentStatus}
-                      onValueChange={(value: "Unpaid" | "Paid") =>
+                      onValueChange={(value: "UNPAID" | "PAID") =>
                         setFormData({ ...formData, paymentStatus: value })
                       }
                     >
@@ -760,20 +779,29 @@ export default function ImportProductsPage() {
                         </span>
                       )}
                   </div>
-                  <Button className="bg-green-600 hover:bg-green-700">
+                  <Button className="bg-green-600 hover:bg-green-700"
+                  onClick={()=>{
+                    createImportDetails.mutate({
+                      ...formData,
+                      importId: getImport?.data?.importRecord.importId
+                    });
+                  }}
+                  >
                     <Plus className="mr-2 h-4 w-4" />
-                    Add Product
+                    Add Product dd
                   </Button>
                 </div>
               </CardContent>
             </Card>
 
             {/* Product Statistics */}
-            {products?.importDetail?.length > 0 && (
+            {getImport?.data?.importDetail?.length > 0 && (
               <div className="grid gap-4 md:grid-cols-4">
                 <Card>
                   <CardContent className="pt-6">
-                    <div className="text-2xl font-bold">{products?.importDetail?.length}</div>
+                    <div className="text-2xl font-bold">
+                      {products?.importDetail?.length}
+                    </div>
                     <p className="text-xs text-muted-foreground">
                       Total Products
                     </p>
@@ -820,7 +848,7 @@ export default function ImportProductsPage() {
             )}
 
             {/* Products List */}
-            {products?.importDetail?.length > 0 && (
+            {getImport?.data?.importDetail?.length > 0 && (
               <Card>
                 <CardHeader>
                   <div className="flex items-center justify-between">
@@ -849,7 +877,7 @@ export default function ImportProductsPage() {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {products.map((product: any) => (
+                        {getImport?.data?.importDetail?.map((product: any) => (
                           <TableRow key={product.id}>
                             <TableCell className="font-medium">
                               {product.name}
@@ -858,7 +886,11 @@ export default function ImportProductsPage() {
                               <Badge variant="outline">{product.qty}</Badge>
                             </TableCell>
                             <TableCell>
-                              {formatPrice(product.price, product.currency)}
+                              {formatPrice(
+                                product.unit_price,
+                                product.currency
+                              )}
+                              {/* {product.unit_price} */}
                             </TableCell>
                             <TableCell>
                               <Badge
@@ -873,25 +905,36 @@ export default function ImportProductsPage() {
                               </Badge>
                             </TableCell>
                             <TableCell className="font-semibold text-green-600">
-                              {formatPrice(product.total, product.currency)}
+                              {formatPrice(
+                                product.total_price,
+                                product.currency
+                              )}
                             </TableCell>
                             <TableCell>
-                              <Select value={product.paymentStatus}>
+                              <Select
+                                value={product.payment_status}
+                                onValueChange={(status) =>
+                                  updatePaymentStatus.mutate({
+                                    importDetailId: product.id,
+                                    paymentStatus: status,
+                                  })
+                                }
+                              >
                                 <SelectTrigger
                                   className={cn(
                                     "w-[120px] h-8",
-                                    product.paymentStatus === "Paid"
+                                    product.payment_status === "PAID"
                                       ? "bg-green-50 text-green-700 border-green-200"
                                       : "bg-red-50 text-red-700 border-red-200"
                                   )}
                                 >
                                   <SelectValue>
-                                    {product.paymentStatus === "Paid" ? (
+                                    {product.payment_status === "PAID" ? (
                                       <CheckCircle className="h-3 w-3 mr-1 inline-block" />
                                     ) : (
                                       <XCircle className="h-3 w-3 mr-1 inline-block" />
                                     )}
-                                    {product.paymentStatus}
+                                    {product.payment_status}
                                   </SelectValue>
                                 </SelectTrigger>
                                 <SelectContent>
@@ -900,7 +943,7 @@ export default function ImportProductsPage() {
                                       key={status.value}
                                       value={status.value}
                                     >
-                                      {status.label === "Paid" ? (
+                                      {status.label === "PAID" ? (
                                         <CheckCircle className="h-3 w-3 mr-1 inline-block" />
                                       ) : (
                                         <XCircle className="h-3 w-3 mr-1 inline-block" />
