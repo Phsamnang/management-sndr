@@ -6,6 +6,12 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 
+  const currencies = [
+    { value: "USD", label: "USD ($)", symbol: "$" },
+    { value: "KHR", label: "Riel (៛)", symbol: "៛" },
+  ];
+
+
 // utils/currency.js
 
 export function formatRiels(amount:any) {
@@ -28,4 +34,20 @@ export function formatRiels(amount:any) {
      hour: "2-digit",
      minute: "2-digit",
    });
+ };
+
+ export const formatCurrencyPrice = (price: number, currency: string) => {
+    const currencyData = currencies.find((c) => c.value === currency);
+   const symbol = currencyData?.symbol || "$";
+
+   const formatter = new Intl.NumberFormat("en-US", {
+     minimumFractionDigits: currency === "KHR" ? 0 : 2,
+     maximumFractionDigits: currency === "KHR" ? 0 : 2,
+   });
+
+   if (currency === "KHR") {
+     return `${formatter.format(price)} ${symbol}`;
+   } else {
+     return `${symbol}${formatter.format(price)}`;
+   }
  };

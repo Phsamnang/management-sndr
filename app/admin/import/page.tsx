@@ -58,7 +58,7 @@ import {
   FileInput,
 } from "lucide-react";
 import Link from "next/link";
-import { cn } from "@/lib/utils";
+import { cn, formatCurrencyPrice } from "@/lib/utils";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { importService } from "@/service/import-service";
 import useGetAllProducts from "@/hooks/get-all-products";
@@ -235,16 +235,7 @@ export default function ImportProductsPage() {
     { value: "PAID", label: "PAID" },
   ];
 
-  const formatPrice = (price: number, currency: string) => {
-    const currencyData = currencies.find((c) => c.value === currency);
-    const symbol = currencyData?.symbol || "$";
 
-    if (currency === "KHR") {
-      return `${price} ${symbol}`;
-    } else {
-      return `${symbol}${price}`;
-    }
-  };
 
   const validateForm = () => {
     const newErrors = {
@@ -659,7 +650,7 @@ export default function ImportProductsPage() {
                                         {product.name}
                                       </div>
                                       <div className="text-sm text-gray-500">
-                                        {formatPrice(
+                                        {formatCurrencyPrice(
                                           product.price,
                                           product.currency
                                         )}{" "}
@@ -770,7 +761,7 @@ export default function ImportProductsPage() {
                         <span>
                           Total:{" "}
                           <strong>
-                            {formatPrice(
+                            {formatCurrencyPrice(
                               parseInt(formData.qty || "0") *
                                 parseFloat(formData.price || "0"),
                               formData.currency
@@ -779,16 +770,17 @@ export default function ImportProductsPage() {
                         </span>
                       )}
                   </div>
-                  <Button className="bg-green-600 hover:bg-green-700"
-                  onClick={()=>{
-                    createImportDetails.mutate({
-                      ...formData,
-                      importId: getImport?.data?.importRecord.importId
-                    });
-                  }}
+                  <Button
+                    className="bg-green-600 hover:bg-green-700"
+                    onClick={() => {
+                      createImportDetails.mutate({
+                        ...formData,
+                        importId: getImport?.data?.importRecord.importId,
+                      });
+                    }}
                   >
                     <Plus className="mr-2 h-4 w-4" />
-                    Add Product dd
+                    Add Product
                   </Button>
                 </div>
               </CardContent>
@@ -800,19 +792,23 @@ export default function ImportProductsPage() {
                 <Card>
                   <CardContent className="pt-6">
                     <div className="text-2xl font-bold">
-                      {products?.importDetail?.length}
+                      {formatCurrencyPrice(
+                        getImport?.data?.importRecord?.totalAmountUsd,
+                        "USD"
+                      )}
                     </div>
-                    <p className="text-xs text-muted-foreground">
-                      Total Products
-                    </p>
+                    <p className="text-xs text-muted-foreground">Total USD</p>
                   </CardContent>
                 </Card>
                 <Card>
                   <CardContent className="pt-6">
-                    <div className="text-2xl font-bold text-blue-600"></div>
-                    <p className="text-xs text-muted-foreground">
-                      Total Quantity
-                    </p>
+                    <div className="text-2xl font-bold text-blue-600">
+                      {formatCurrencyPrice(
+                        getImport?.data?.importRecord?.totalAmountRiel,
+                        "KHR"
+                      )}
+                    </div>
+                    <p className="text-xs text-muted-foreground">Total Reils</p>
                   </CardContent>
                 </Card>
                 {/* {Object.entries(getTotalValue()).map(([currency, total]) => (
@@ -828,20 +824,39 @@ export default function ImportProductsPage() {
                   </Card>
                 ))} */}
                 <Card>
-                  <CardContent className="pt-6">
-                    <div className="flex items-center gap-2">
-                      <span className="text-2xl font-bold text-red-600"></span>
-                      <span className="text-sm text-muted-foreground">
-                        Unpaid
-                      </span>
-                      <span className="text-2xl font-bold text-green-600 ml-4"></span>
-                      <span className="text-sm text-muted-foreground">
-                        Paid
-                      </span>
-                    </div>
-                    <p className="text-xs text-muted-foreground">
+                  <CardContent className="pt-8">
+                    <span className="text-xl font-bold">UNDPIAD:</span>
+                    <span className="text-xl font-bold text-red-600 ml-4">
+                      {formatCurrencyPrice(
+                        getImport?.data?.importRecord?.totalRemainingRiel,
+                        "KHR"
+                      )}
+                    </span>
+                    <span className="text-xl font-bold text-red-600 ml-4">
+                      {formatCurrencyPrice(
+                        getImport?.data?.importRecord?.totalRemainingUsd,
+                        "USD"
+                      )}
+                    </span>
+
+                    {/* <p className="text-xs text-muted-foreground">
                       Payment Status
-                    </p>
+                    </p> */}
+                  </CardContent>
+                  <CardContent>
+                    <span className="text-xl font-bold">PAID:</span>
+                    <span className="text-xl font-bold text-green-600 ml-4">
+                      {formatCurrencyPrice(
+                        getImport?.data?.importRecord?.totalPaidRiel,
+                        "KHR"
+                      )}
+                    </span>
+                    <span className="text-xl font-bold text-green-600 ml-4">
+                      {formatCurrencyPrice(
+                        getImport?.data?.importRecord?.totalPaidUsd,
+                        "USD"
+                      )}
+                    </span>
                   </CardContent>
                 </Card>
               </div>
@@ -886,7 +901,7 @@ export default function ImportProductsPage() {
                               <Badge variant="outline">{product.qty}</Badge>
                             </TableCell>
                             <TableCell>
-                              {formatPrice(
+                              {formatCurrencyPrice(
                                 product.unit_price,
                                 product.currency
                               )}
@@ -905,7 +920,7 @@ export default function ImportProductsPage() {
                               </Badge>
                             </TableCell>
                             <TableCell className="font-semibold text-green-600">
-                              {formatPrice(
+                              {formatCurrencyPrice(
                                 product.total_price,
                                 product.currency
                               )}
@@ -1048,7 +1063,7 @@ export default function ImportProductsPage() {
                   <div>
                     <h4 className="font-medium text-gray-700">Unit Price</h4>
                     <p className="text-lg">
-                      {formatPrice(
+                      {formatCurrencyPrice(
                         selectedProduct.price,
                         selectedProduct.currency
                       )}
@@ -1072,7 +1087,7 @@ export default function ImportProductsPage() {
                   <div>
                     <h4 className="font-medium text-gray-700">Total Value</h4>
                     <p className="text-xl font-bold text-green-600">
-                      {formatPrice(
+                      {formatCurrencyPrice(
                         selectedProduct.total,
                         selectedProduct.currency
                       )}
@@ -1105,12 +1120,12 @@ export default function ImportProductsPage() {
                   </h4>
                   <p className="text-sm text-gray-600">
                     {selectedProduct.qty} ×{" "}
-                    {formatPrice(
+                    {formatCurrencyPrice(
                       selectedProduct.price,
                       selectedProduct.currency
                     )}{" "}
                     ={" "}
-                    {formatPrice(
+                    {formatCurrencyPrice(
                       selectedProduct.total,
                       selectedProduct.currency
                     )}
