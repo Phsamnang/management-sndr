@@ -800,7 +800,7 @@ export default function ImportProductsPage() {
                     <p className="text-xs text-muted-foreground">Total USD</p>
                   </CardContent>
                 </Card>
-                <Card>
+                <Card >
                   <CardContent className="pt-6">
                     <div className="text-2xl font-bold text-blue-600">
                       {formatCurrencyPrice(
@@ -823,7 +823,11 @@ export default function ImportProductsPage() {
                     </CardContent>
                   </Card>
                 ))} */}
-                <Card>
+                <Card style={
+                  {
+                    width:400
+                  }
+                }>
                   <CardContent className="pt-8">
                     <span className="text-xl font-bold">UNDPIAD:</span>
                     <span className="text-xl font-bold text-red-600 ml-4">
