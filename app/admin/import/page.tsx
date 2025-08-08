@@ -97,44 +97,44 @@ export default function ImportProductsPage() {
   // const [products, setProducts] = useState<Product[]>([]);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [showPreview, setShowPreview] = useState(false);
- const [dateFilter, setDateFilter] = useState<string>(new Date().toISOString().split("T")[0]);
-  const useClient=useQueryClient()
-  const createImport=useMutation({
-    mutationFn:(data:any)=>importService.createImport(data),
-    onSuccess:()=>{
-      useClient.invalidateQueries({queryKey:['getImport']})
-    }
-  })
-
-  const getImport=useQuery({
-    queryFn:()=>importService.getImportByDate(dateFilter),
-    queryKey:['getImport']
-
-  })
-
-  const {products}=useGetAllProducts();
-
-  const updatePaymentStatus=useMutation({
-    mutationFn:(data:any)=>importService.updateImportPaymentStatus(data),
-    onSuccess:()=>{
+  const [dateFilter, setDateFilter] = useState<string>(
+    new Date().toISOString().split("T")[0]
+  );
+  const useClient = useQueryClient();
+  const createImport = useMutation({
+    mutationFn: (data: any) => importService.createImport(data),
+    onSuccess: () => {
       useClient.invalidateQueries({ queryKey: ["getImport"] });
-    }
-  })
+    },
+  });
 
+  const getImport = useQuery({
+    queryFn: () => importService.getImportByDate(dateFilter),
+    queryKey: ["getImport"],
+  });
 
-   const createImportDetails = useMutation({
-     mutationFn: (data: any) => importService.createImportDetail(data),
-     onSuccess: () => {
-       useClient.invalidateQueries({ queryKey: ["getImport"] });
-           setFormData({
-             name: "",
-             qty: "",
-             price: "",
-             currency: "USD",
-             paymentStatus: "UNPAID",
-           });
-     },
-   });
+  const { products } = useGetAllProducts();
+
+  const updatePaymentStatus = useMutation({
+    mutationFn: (data: any) => importService.updateImportPaymentStatus(data),
+    onSuccess: () => {
+      useClient.invalidateQueries({ queryKey: ["getImport"] });
+    },
+  });
+
+  const createImportDetails = useMutation({
+    mutationFn: (data: any) => importService.createImportDetail(data),
+    onSuccess: () => {
+      useClient.invalidateQueries({ queryKey: ["getImport"] });
+      setFormData({
+        name: "",
+        qty: "",
+        price: "",
+        currency: "USD",
+        paymentStatus: "UNPAID",
+      });
+    },
+  });
 
   const [formData, setFormData] = useState({
     name: "",
@@ -235,8 +235,6 @@ export default function ImportProductsPage() {
     { value: "PAID", label: "PAID" },
   ];
 
-
-
   const validateForm = () => {
     const newErrors = {
       name: "",
@@ -276,19 +274,18 @@ export default function ImportProductsPage() {
     setImportSessions([...importSessions, newImportSession]);
     setCurrentImportSession(newImportSession);
     setImportName("");
-   
   };
 
   useEffect(() => {
     if (getImport?.data) {
       setShowImportForm(true);
-    }else{
-      setShowImportForm(false)
+    } else {
+      setShowImportForm(false);
     }
   }, [getImport?.data]);
 
   // const addProduct = () => {
-  //   if (validateForm()) { 
+  //   if (validateForm()) {
   //     const qty = parseInt(formData.qty);
   //     const price = parseFloat(formData.price);
   //     const total = qty * price;
@@ -800,7 +797,7 @@ export default function ImportProductsPage() {
                     <p className="text-xs text-muted-foreground">Total USD</p>
                   </CardContent>
                 </Card>
-                <Card >
+                <Card>
                   <CardContent className="pt-6">
                     <div className="text-2xl font-bold text-blue-600">
                       {formatCurrencyPrice(
@@ -823,11 +820,11 @@ export default function ImportProductsPage() {
                     </CardContent>
                   </Card>
                 ))} */}
-                <Card style={
-                  {
-                    width:400
-                  }
-                }>
+                <Card
+                  style={{
+                    width: 400,
+                  }}
+                >
                   <CardContent className="pt-8">
                     <span className="text-xl font-bold">UNDPIAD:</span>
                     <span className="text-xl font-bold text-red-600 ml-4">
