@@ -95,7 +95,7 @@ export default function ImportProductsPage() {
     useState<ImportSession | null>(null);
   const [importName, setImportName] = useState("");
   // const [products, setProducts] = useState<Product[]>([]);
-  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [selectedProduct, setSelectedProduct] = useState<any | null>(null);
   const [showPreview, setShowPreview] = useState(false);
   const [dateFilter, setDateFilter] = useState<string>(
     new Date().toISOString().split("T")[0]
@@ -1065,7 +1065,7 @@ export default function ImportProductsPage() {
                     <h4 className="font-medium text-gray-700">Unit Price</h4>
                     <p className="text-lg">
                       {formatCurrencyPrice(
-                        selectedProduct.price,
+                        selectedProduct.unit_price,
                         selectedProduct.currency
                       )}
                     </p>
@@ -1089,7 +1089,7 @@ export default function ImportProductsPage() {
                     <h4 className="font-medium text-gray-700">Total Value</h4>
                     <p className="text-xl font-bold text-green-600">
                       {formatCurrencyPrice(
-                        selectedProduct.total,
+                        selectedProduct.total_price,
                         selectedProduct.currency
                       )}
                     </p>
@@ -1101,17 +1101,17 @@ export default function ImportProductsPage() {
                   <Badge
                     className={cn(
                       "capitalize text-lg px-3 py-1",
-                      selectedProduct.paymentStatus === "Paid"
+                      selectedProduct.payment_status === "PAID"
                         ? "bg-green-100 text-green-700"
                         : "bg-red-100 text-red-700"
                     )}
                   >
-                    {selectedProduct.paymentStatus === "Paid" ? (
+                    {selectedProduct.payment_status === "PAID" ? (
                       <CheckCircle className="h-4 w-4 mr-2" />
                     ) : (
                       <XCircle className="h-4 w-4 mr-2" />
                     )}
-                    {selectedProduct.paymentStatus}
+                    {selectedProduct.payment_status}
                   </Badge>
                 </div>
 
@@ -1122,12 +1122,12 @@ export default function ImportProductsPage() {
                   <p className="text-sm text-gray-600">
                     {selectedProduct.qty} ×{" "}
                     {formatCurrencyPrice(
-                      selectedProduct.price,
+                      selectedProduct.unit_price,
                       selectedProduct.currency
                     )}{" "}
                     ={" "}
                     {formatCurrencyPrice(
-                      selectedProduct.total,
+                      selectedProduct.total_price,
                       selectedProduct.currency
                     )}
                   </p>
