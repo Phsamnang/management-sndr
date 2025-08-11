@@ -110,7 +110,7 @@ export default function ImportProductsPage() {
 
   const getImport = useQuery({
     queryFn: () => importService.getImportByDate(dateFilter),
-    queryKey: ["getImport"],
+    queryKey: ["getImport",dateFilter],
   });
 
   const { products } = useGetAllProducts();
@@ -360,12 +360,28 @@ export default function ImportProductsPage() {
               <span>Back to Menu</span>
             </Link>
           </div>
-          <h1 className="text-2xl font-bold flex items-center gap-2">
+          <div className="flex items-center">
+            <Label htmlFor="filterDate">Date</Label>
+            {/* <Input
+                      id="importName"
+                      placeholder="Enter import name (e.g., Weekly Stock, Monthly Inventory)"
+                      value={importName}
+                      onChange={(e) => setImportName(e.target.value)}
+                    /> */}
+            <Input
+              id="filterDate"
+              type="date"
+              name="filterDate"
+              className="mt-1"
+              onChange={(e) => setDateFilter(e.target.value)}
+            />
+          </div>
+          {/* <h1 className="text-2xl font-bold flex items-center gap-2">
             <Package className="h-6 w-6" />
             {showImportForm
               ? `Import: ${currentImportSession?.name}`
               : "Product Imports"}
-          </h1>
+          </h1> */}
         </div>
       </header>
 
@@ -382,15 +398,6 @@ export default function ImportProductsPage() {
               </CardHeader>
               <CardContent>
                 <div className="grid gap-4 md:grid-cols-4">
-                  <div className="md:col-span-3">
-                    <Label htmlFor="importName">Import Name</Label>
-                    <Input
-                      id="importName"
-                      placeholder="Enter import name (e.g., Weekly Stock, Monthly Inventory)"
-                      value={importName}
-                      onChange={(e) => setImportName(e.target.value)}
-                    />
-                  </div>
                   <div className="flex items-end">
                     <Button
                       onClick={() =>
