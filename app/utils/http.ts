@@ -2,8 +2,10 @@ import axios from "axios";
 import {getSession, signOut} from "next-auth/react";
 import {Session} from "next-auth";
 
+const baseURLAPI = process.env.NEXTAUTH_URL || "http://18.139.2.70:8080";
+
 export const http = axios.create({
-  baseURL:'http://localhost:8080/api/v1',
+  baseURL:`${baseURLAPI}/api/v1`,
 });
 
 http.interceptors.request.use(async (request) => {
