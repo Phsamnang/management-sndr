@@ -77,7 +77,6 @@ export default function ChefTablePage() {
     socket.on("foodOrdered", (data) => {
       queryClient.invalidateQueries({ queryKey: ["chef-foods"] });
     });
-
     // Clean up on component unmount
     return () => {
       socket.disconnect();
