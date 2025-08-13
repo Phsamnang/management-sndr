@@ -473,7 +473,7 @@ export default function SimplifiedMenu() {
                             <div className="flex items-center gap-2">
                               <div className="h-12 w-12 overflow-hidden rounded-md border">
                                 <img
-                                  src={item?.img || "/placeholder.svg"}
+                                  src={item?.image || "/placeholder.svg"}
                                   alt={item?.name}
                                   className="h-full w-full object-cover"
                                 />

@@ -31,7 +31,7 @@ type MenuItem = {
   name: string;
   price: number;
   category: string;
-  image: string;
+  img: string;
 };
 
 type CartItem = MenuItem & {
@@ -70,6 +70,9 @@ export default function RestaurantPOS() {
     queryKey: ["menus", tableParam],
   });
 
+
+  console.log(data,"data")
+
   const sales = useQuery({
     queryFn: () => SaleService.getSale(Number(tableParam)),
     queryKey: ["sale", tableParam],
@@ -105,6 +108,7 @@ export default function RestaurantPOS() {
     queryKey: ["saleItems", tableParam],
   });
 
+
   // Get unique categories from menu items
   const categories = Array.from(
     new Set(data?.map((item: MenuItem) => item.category))
@@ -139,7 +143,7 @@ export default function RestaurantPOS() {
         <CardContent className="p-3">
           <div className="flex items-center gap-3">
             <img
-              src={item?.image || "/placeholder.svg"}
+              src={item?.img || "/placeholder.svg"}
               alt={item?.name}
               className="h-16 w-16 sm:h-20 sm:w-20 rounded-md object-cover flex-shrink-0"
             />
