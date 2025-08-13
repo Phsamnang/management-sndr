@@ -65,10 +65,10 @@ export default function TableDeliveryPage() {
   });
 
   const queryClient = useQueryClient();
-
+  const baseUrlAPI = process.env.NEXT_PUBLIC_POS_API;
   useEffect(() => {
     // Connect to backend WebSocket server
-    const socket = io("http://3.0.179.123:8080"); // 🔁 Replace with your server URL
+    const socket = io(baseUrlAPI); // 🔁 Replace with your server URL
 
     socket.on("connect", () => {
       console.log("Connected to WebSocket server");

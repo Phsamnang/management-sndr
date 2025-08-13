@@ -29,8 +29,7 @@ import {
 import Link from "next/link";
 import { ChefService } from "@/service/chef-service";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import {io} from "socket.io-client";
-
+import { io } from "socket.io-client";
 
 type MenuItem = {
   id: string;
@@ -50,47 +49,44 @@ type MenuItem = {
 };
 
 export default function ChefTablePage() {
+  const queryClient = useQueryClient();
 
-const queryClient=useQueryClient()
+  const foods = useQuery({
+    queryKey: ["chef-foods"],
+    queryFn: () => ChefService.getFoods(),
+  });
 
-  const foods=useQuery({
-    queryKey:["chef-foods"],
-    queryFn:()=>ChefService.getFoods()
-  })
+  const updateFoodStatus = useMutation({
+    mutationFn: (data: any) => ChefService.updateFoodStatus(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["chef-foods"] });
+    },
+  });
 
+  const baseUrlAPI = process.env.NEXT_PUBLIC_POS_API;
 
-  const updateFoodStatus=useMutation({
-    mutationFn:(data:any)=>ChefService.updateFoodStatus(data),
-    onSuccess:()=>{
-      queryClient.invalidateQueries({queryKey:["chef-foods"]})
-    }
-  })
+  useEffect(() => {
+    // Connect to backend WebSocket server
+    const socket = io(baseUrlAPI); // 🔁 Replace with your server URL
 
+    socket.on("connect", () => {
+      console.log("Connected to WebSocket server");
+    });
 
-   useEffect(() => {
-     // Connect to backend WebSocket server
-     const socket = io("http://3.0.179.123:8080"); // 🔁 Replace with your server URL
+    // Listen for the 'new-order' event
+    socket.on("foodOrdered", (data) => {
+      queryClient.invalidateQueries({ queryKey: ["chef-foods"] });
+    });
 
-     socket.on("connect", () => {
-       console.log("Connected to WebSocket server");
-     });
+    // Clean up on component unmount
+    return () => {
+      socket.disconnect();
+    };
+  }, []);
 
-     // Listen for the 'new-order' event
-     socket.on("foodOrdered", (data) => {
-       queryClient.invalidateQueries({queryKey:["chef-foods"]})
-     });
-
-     // Clean up on component unmount
-     return () => {
-       socket.disconnect();
-     };
-   }, []);
-
-  if(foods?.isLoading){
-    return <div>Loading...</div>
+  if (foods?.isLoading) {
+    return <div>Loading...</div>;
   }
-
-
 
   // Filter menu items - only show pending and cooking items
   const filteredItems = foods?.data?.filter(
@@ -138,7 +134,7 @@ const queryClient=useQueryClient()
     switch (status) {
       case "pending":
         return "bg-gray-100 text-gray-800";
-      case"processing":
+      case "processing":
         return "bg-blue-100 text-blue-800";
       case "completed":
         return "bg-green-100 text-green-800";
@@ -154,7 +150,6 @@ const queryClient=useQueryClient()
     if (priority === "high") return "bg-orange-50";
     return "bg-white hover:bg-gray-50";
   };
-
 
   return (
     <div className="flex min-h-screen flex-col bg-gradient-to-br from-gray-50 to-gray-100">

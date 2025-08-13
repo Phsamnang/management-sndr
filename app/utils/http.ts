@@ -2,7 +2,7 @@ import axios from "axios";
 import {getSession, signOut} from "next-auth/react";
 import {Session} from "next-auth";
 
-const baseURLAPI = process.env.NEXTAUTH_URL || "http://3.0.179.123:8080";
+const baseURLAPI = process.env.NEXT_PUBLIC_POS_API || "http://3.0.179.123:8080";
 
 export const http = axios.create({
   baseURL:`${baseURLAPI}/api/v1`,
