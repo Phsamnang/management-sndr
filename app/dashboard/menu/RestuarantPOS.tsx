@@ -23,6 +23,7 @@ import { menuService } from "@/service/menu-service";
 import { SaleService } from "@/service/sale-service";
 import { InvoicePrint } from "./print";
 import { useReactToPrint } from "react-to-print";
+import { formatCurrencyPrice } from "@/lib/utils";
 
 // Menu item type definition
 type MenuItem = {
@@ -148,7 +149,7 @@ export default function RestaurantPOS() {
                   {item.name}
                 </h3>
                 <p className="font-semibold text-sm sm:text-base">
-                  ${item.price}
+                  {formatCurrencyPrice(item.price,'KHR')}
                 </p>
               </div>
               <div className="mt-2 flex flex-col sm:flex-row sm:items-center gap-2">
@@ -327,7 +328,11 @@ export default function RestaurantPOS() {
                         </span>
                         <div className="flex items-center gap-2 flex-shrink-0">
                           <span className="text-sm sm:text-base">
-                            ${item.priceAtSale * item.quantity}
+                          
+                            {formatCurrencyPrice(
+                              item.priceAtSale * item.quantity,
+                              "KHR"
+                            )}
                           </span>
                           <Button
                             onClick={() => removeItem.mutate(item?.id)}
@@ -341,7 +346,7 @@ export default function RestaurantPOS() {
                       </div>
                       <div className="flex items-center gap-2 text-xs sm:text-sm text-muted-foreground">
                         <span>
-                          ${item.priceAtSale} × {item.quantity}
+                          {formatCurrencyPrice(item.priceAtSale,'KHR')} × {item.quantity}
                         </span>
                       </div>
                     </div>
@@ -356,7 +361,9 @@ export default function RestaurantPOS() {
               <Separator />
               <div className="flex justify-between font-bold text-sm sm:text-base">
                 <span>Total</span>
-                <span>${getItem?.data?.totalAmount}</span>
+                <span>
+                  {formatCurrencyPrice(getItem?.data?.totalAmount, "KHR")}
+                </span>
               </div>
             </div>
 
