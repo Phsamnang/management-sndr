@@ -28,6 +28,7 @@ export const authOptions: AuthOptions = {
   ],
   pages: {
     signIn: "/login",
+    signOut:'/'
   },
   callbacks: {
       async jwt({ token, user }: { token: JWT, user: any }) {
