@@ -7,7 +7,7 @@ const ServiceId={
 
 const getAllProduct=async()=>{
     const rs=await http.get(ServiceId.PRODUCT)
-    return rs.data;
+    return rs.data?.data;
 }
 
 export const productService={

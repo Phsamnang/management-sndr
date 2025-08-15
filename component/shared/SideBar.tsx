@@ -44,7 +44,7 @@ const items = [
   {
     title: "Sign Out",
     icon: LogOutIcon,
-    onClick: () => signOut({ callbackUrl: "/" }),
+    onClick: () => signOut({ callbackUrl: "/login" }),
   },
 ];
 

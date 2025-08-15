@@ -10,7 +10,7 @@ const getCategory = async () => {
 }
 const createCategory = async (data:any)=>{
     const rs=await http.post(ServiceId.CATEGORY,data);
-    return rs.data;
+    return rs.data?.data;
 }
 export const categoryService = {
          getCategory,

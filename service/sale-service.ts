@@ -10,23 +10,23 @@ const createSale=async(tableId:number)=>{
     const response=await http.post(ServiveID.SALE,{
          tableId
     });
-    return response.data;
+    return response.data?.data;
 }
 
 const orderFood=async(data:any)=>{
     const rs=await http.post(ServiveID.ORDER,{...data})
 
-    return rs.data;
+    return rs.data?.data;
 }
 
 const getSale=async(tableId:number)=>{
     const res=await http.get(ServiveID.SALE+`/${tableId}`);
-    return res.data;
+    return res.data?.data;
 }
 
 const getSaleById=async(saleId:number)=>{
     const res=await http.get(ServiveID.SALE+`/${saleId}/items`);
-    return res.data;
+    return res.data?.data;
 }
 
 const removeItem = async (saleItemId: number) => {
@@ -51,7 +51,7 @@ const getSaleByDate=async(startDate:any,endDate:any)=>{
            endDate:endDate
         }
     })
-    return res.data;
+    return res.data?.data;
 }
 
 export const SaleService={

@@ -7,22 +7,22 @@ const ServiceId = {
 
 const getAllTables = async () => {
   const response = await http.get(ServiceId.TABLE);
-  return response.data;
+  return response.data?.data;
 };
 
 const getAllTableTypes = async () => {
   const response = await http.get(`${ServiceId.TABLE}/type`);
-  return response.data;
+  return response.data?.data;
 };
 
 const createTypeTable=async(data:any)=>{
   const rs=await http.post(ServiceId.TYPE_TABLE,data);
-  return rs.data;
+  return rs.data?.data;
 }
 
 const createTable = async (data: any) => {
   const rs = await http.post(ServiceId.TABLE, data);
-  return rs.data;
+  return rs.data?.data;
 };
 
 export const tableService = {

@@ -71,8 +71,6 @@ export default function RestaurantPOS() {
   });
 
 
-  console.log(data,"data")
-
   const sales = useQuery({
     queryFn: () => SaleService.getSale(Number(tableParam)),
     queryKey: ["sale", tableParam],
@@ -111,7 +109,7 @@ export default function RestaurantPOS() {
 
   // Get unique categories from menu items
   const categories = Array.from(
-    new Set(data?.map((item: MenuItem) => item.category))
+    new Set(data?.data?.map((item: MenuItem) => item.category))
   ).sort();
 
   useEffect(() => {

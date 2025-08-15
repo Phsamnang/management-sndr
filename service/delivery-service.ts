@@ -9,12 +9,12 @@ const serviceId = {
 const getDeliveryFoods = async () => {
   const response = await http.get(`${serviceId.DELIVERY}`);
   const data = response.data;
-  return data;
+  return data?.data;
 };
 
 const updateDelivery=async(data:any)=>{
   const res=await http.put(serviceId.UPDATED,data)
-  return res.data;
+  return res.data?.data;
 }
 
 export const deliveryService = {

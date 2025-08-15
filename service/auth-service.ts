@@ -6,7 +6,7 @@ const serviceId = {
 
 async function login(data: any) {
    const response = await http.post(serviceId.LOGIN, data)
-   return response.data
+   return response.data?.data
 }
 
 

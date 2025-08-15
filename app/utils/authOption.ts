@@ -22,20 +22,21 @@ export const authOptions: AuthOptions = {
       },
       async authorize(credentials) {
         const user = await authService.login(credentials);
+      
         return user;
+    
       },
     }),
   ],
   pages: {
     signIn: "/login",
-    signOut:'/'
   },
   callbacks: {
-      async jwt({ token, user }: { token: JWT, user: any }) {
+      async jwt({ token, user }: { token: JWT, user?: User }) {
       // Attach the token to the JWT if the user object is available (on successful login)
       if (user) {
-        token.user = user;
-        token.accessToken = user.token; // Store the Spring token in the JWT
+        token.user = user?.data;
+        token.accessToken = user?.data?.accessToken; // Store the Spring token in the JWT
       }
       return token;
     },
@@ -65,9 +66,12 @@ declare module "next-auth" {
   }
 
   interface User {
-    id: string;
-    name: string;
-    accessToken: string;
+    succuss:any,
+    data: {
+      id: string;
+      name: string;
+      accessToken: string;
+    };
   }
 }
 
