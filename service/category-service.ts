@@ -6,7 +6,7 @@ const ServiceId={
 
 const getCategory = async () => {
     const response = await http.get(ServiceId.CATEGORY);
-    return response?.data;
+    return response?.data?.data;
 }
 const createCategory = async (data:any)=>{
     const rs=await http.post(ServiceId.CATEGORY,data);

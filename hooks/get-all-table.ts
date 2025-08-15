@@ -7,7 +7,7 @@ const useGetAllTable = () => {
     queryKey: ["tables"],
   });
   return {
-    tableInfo: data?.data,
+    tableInfo: data,
     isLoading: isLoading,
   };
 };

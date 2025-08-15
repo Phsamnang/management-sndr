@@ -54,6 +54,8 @@ export default function TableSelection() {
     });
 
 
+    console.log(tableInfo)
+
   useEffect(()=>{
     useClient.invalidateQueries({queryKey:['table']})
   },[tableInfo])

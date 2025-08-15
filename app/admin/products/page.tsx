@@ -122,6 +122,8 @@ export default function SimplifiedMenu() {
     },
   });
 
+  console.log(data,"product")
+
   // Filter menu items based on selected category and search query
   const filteredItems = data?.filter((item: any) => {
     const matchesCategory =
@@ -189,7 +191,6 @@ export default function SimplifiedMenu() {
 
   const openImageDialog = (item: MenuItem) => {
     setSelectedImageItem(item);
-    console.log(item);
     setIsImageDialogOpen(true);
   };
 
@@ -216,6 +217,7 @@ export default function SimplifiedMenu() {
       setSelectedImageItem(null);
     }
   };
+
 
   if (categoryLoading || tableTypeLoading) return <MenusLoading />;
 
@@ -334,8 +336,7 @@ export default function SimplifiedMenu() {
                         <SelectValue placeholder="Select category" />
                       </SelectTrigger>
                       <SelectContent>
-                        {categories
-                          ?.filter((cat: any) => cat.id !== "all")
+                        {categories?.filter((cat: any) => cat.id !== "all")
                           .map((category: any) => (
                             <SelectItem key={category.id} value={category.id}>
                               {category.name}
