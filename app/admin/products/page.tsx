@@ -186,7 +186,7 @@ export default function SimplifiedMenu() {
   // Get price for the selected table type
   const getPriceForTableType = (item: MenuItem, tableType: string) => {
     const priceObj = item?.prices.find((p) => p?.tableType === tableType);
-    return priceObj ? priceObj.price : item.prices[0].price||"0.00";
+    return priceObj ? priceObj.price : item?.prices[0]?.price||"0.00";
   };
 
   const openImageDialog = (item: MenuItem) => {

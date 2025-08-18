@@ -97,20 +97,25 @@ export default function RestaurantPOS() {
     },
   });
 
+
   useEffect(() => {
     setSaleId(sales?.data?.id);
   }, [sales?.data]);
 
   const getItem = useQuery({
     queryFn: () => SaleService.getSaleById(saleId),
-    queryKey: ["saleItems", tableParam],
+    queryKey: ["saleItems", tableParam,sales?.data],
   });
+
+
+  console.log(getItem)
 
 
   // Get unique categories from menu items
   const categories = Array.from(
-    new Set(data?.data?.map((item: MenuItem) => item.category))
+    new Set(data?.map((item: MenuItem) => item.category))
   ).sort();
+
 
   useEffect(() => {
     // Set default active category
@@ -129,6 +134,9 @@ export default function RestaurantPOS() {
 
     orderFood.mutate(data as any);
   };
+
+
+  console.log(data)
 
   const getCartItemCount = () => {
     return cart.reduce((count, item) => count + item.quantity, 0);

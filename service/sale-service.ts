@@ -21,7 +21,7 @@ const orderFood=async(data:any)=>{
 
 const getSale=async(tableId:number)=>{
     const res=await http.get(ServiveID.SALE+`/${tableId}`);
-    return res.data?.data;
+    return res?.data?.data;
 }
 
 const getSaleById=async(saleId:number)=>{
