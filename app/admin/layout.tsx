@@ -24,7 +24,7 @@ import { cn } from "@/lib/utils";
 const navigation = [
   { name: "Dashboard", href: "/admin", icon: LayoutDashboard },
   { name: "Products", href: "/admin/products", icon: Package },
-  { name: "Categories", href: "/admin/categories", icon: Package },
+  { name: "Table", href: "/admin/tables", icon: Package },
   { name: "Orders", href: "/admin/orders", icon: ShoppingCart },
   { name: "Staff", href: "/admin/staff", icon: Users },
   { name: "Import Product", href: "/admin/import", icon: Building2 },

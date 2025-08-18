@@ -1,6 +1,6 @@
 "use client";
 
-import { Calendar, Home, Inbox, LogOutIcon, Menu, Search } from "lucide-react";
+import { Calendar, Home, Inbox, LogOut, LogOutIcon, Menu, Search } from "lucide-react";
 
 import {
   Sidebar,
@@ -13,6 +13,8 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import { signOut } from "next-auth/react";
+import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
 
 // Menu items.
 const items = [
@@ -48,7 +50,9 @@ const items = [
   },
 ];
 
+
 export function SidebarMain() {
+    const router = useRouter();
   return (
     <Sidebar>
       <SidebarContent>
@@ -77,6 +81,16 @@ export function SidebarMain() {
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
+      <div className="border-t p-4">
+        <Button
+          variant="ghost"
+          className="w-full justify-start gap-3 h-11 text-red-600 hover:text-red-700 hover:bg-red-50"
+          onClick={() => router.push("/admin")}
+        >
+          <LogOut className="h-5 w-5" />
+          Admin
+        </Button>
+      </div>
     </Sidebar>
   );
 }
