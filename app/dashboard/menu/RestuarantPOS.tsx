@@ -22,8 +22,8 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { menuService } from "@/service/menu-service";
 import { SaleService } from "@/service/sale-service";
 import { InvoicePrint } from "./print";
-import { useReactToPrint } from "react-to-print";
 import { formatCurrencyPrice } from "@/lib/utils";
+import { useReactToPrint } from "react-to-print";
 
 // Menu item type definition
 type MenuItem = {
@@ -48,7 +48,7 @@ export default function RestaurantPOS() {
   const [tableId, setTableId] = useState<number | null>(null);
   const [activeCategory, setActiveCategory] = useState<string>("");
   const { tableInfo } = useGetAllTable();
-  const [qty, setQty] = useState(0);
+  const [qty, setQty] = useState(1);
   const [saleId, setSaleId] = useState(0);
   const [showMobileCart, setShowMobileCart] = useState(false);
 
@@ -63,23 +63,25 @@ export default function RestaurantPOS() {
       // Redirect back to table selection if no table is selected
       router.push("/");
     }
-  }, []);
+  }, [tableParam, router]);
 
   const { data, isLoading } = useQuery({
     queryFn: () => menuService.getAllMenus(Number(tableParam)),
     queryKey: ["menus", tableParam],
+    enabled: !!tableParam,
   });
-
 
   const sales = useQuery({
     queryFn: () => SaleService.getSale(Number(tableParam)),
     queryKey: ["sale", tableParam],
+    enabled: !!tableParam,
   });
 
   const orderFood = useMutation({
-    mutationFn: (data) => SaleService.orderFood(data),
+    mutationFn: (data: any) => SaleService.orderFood(data),
     onSuccess: () => {
       useClient.invalidateQueries({ queryKey: ["saleItems"] });
+      setQty(1); // Reset quantity after adding
     },
   });
 
@@ -97,25 +99,20 @@ export default function RestaurantPOS() {
     },
   });
 
-
   useEffect(() => {
     setSaleId(sales?.data?.id);
   }, [sales?.data]);
 
   const getItem = useQuery({
     queryFn: () => SaleService.getSaleById(saleId),
-    queryKey: ["saleItems", tableParam,sales?.data],
+    queryKey: ["saleItems", tableParam, saleId],
+    enabled: !!saleId,
   });
-
-
-  console.log(getItem)
-
 
   // Get unique categories from menu items
   const categories = Array.from(
     new Set(data?.map((item: MenuItem) => item.category))
   ).sort();
-
 
   useEffect(() => {
     // Set default active category
@@ -125,6 +122,8 @@ export default function RestaurantPOS() {
   }, [categories, activeCategory]);
 
   const addToCart = (menusId: number, qty: number) => {
+    if (qty <= 0) return;
+
     const data = {
       menusId: menusId,
       saleId: sales?.data?.id,
@@ -132,60 +131,55 @@ export default function RestaurantPOS() {
       tableId: tableId,
     };
 
-    orderFood.mutate(data as any);
+    orderFood.mutate(data);
   };
 
-
-  console.log(data)
-
   const getCartItemCount = () => {
-    return cart.reduce((count, item) => count + item.quantity, 0);
+    return getItem?.data?.saleItemResponse?.length || 0;
   };
 
   const renderMenuItem = (item: MenuItem) => {
-    const cartItem = cart?.find((cartItem) => cartItem.id === item.id);
     return (
-      <Card key={item.id} className="mb-3">
-        <CardContent className="p-3">
-          <div className="flex items-center gap-3">
+      <Card key={item.id} className="group hover:shadow-md transition-shadow">
+        <CardContent className="p-2">
+          <div className="aspect-square mb-2 overflow-hidden rounded-md">
             <img
-              src={item?.img || "/placeholder.svg"}
+              src={
+                item?.img ||
+                "/placeholder.svg?height=120&width=120&query=food+item"
+              }
               alt={item?.name}
-              className="h-16 w-16 sm:h-20 sm:w-20 rounded-md object-cover flex-shrink-0"
+              className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-200"
             />
-            <div className="flex-1 min-w-0">
-              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-1">
-                <h3 className="font-medium text-sm sm:text-base truncate">
-                  {item.name}
-                </h3>
-                <p className="font-semibold text-sm sm:text-base">
-                  {formatCurrencyPrice(item.price,'KHR')}
-                </p>
-              </div>
-              <div className="mt-2 flex flex-col sm:flex-row sm:items-center gap-2">
-                <div className="flex items-center gap-2">
-                  <div className="w-16">
-                    <Input
-                      type="number"
-                      onChange={(e) => {
-                        const value = Number.parseInt(e.target.value);
-                        setQty(value);
-                      }}
-                      className="h-8 text-center text-sm"
-                    />
-                  </div>
-                  {!cartItem && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => addToCart(item?.id, qty)}
-                      className="bg-green-100 text-green-700 hover:bg-green-200 hover:text-green-800 border-green-300 text-xs sm:text-sm"
-                    >
-                      Add
-                    </Button>
-                  )}
-                </div>
-              </div>
+          </div>
+          <div className="space-y-1">
+            <h3 className="font-medium text-xs line-clamp-2 leading-tight">
+              {item.name}
+            </h3>
+            <p className="font-bold text-green-600 text-xs">
+              {formatCurrencyPrice(item.price, "KHR")}
+            </p>
+            <div className="flex items-center gap-1">
+              <Input
+                type="number"
+                min="1"
+                onChange={(e) => {
+                  const value = Math.max(
+                    1,
+                    Number.parseInt(e.target.value) || 1
+                  );
+                  setQty(Number.parseInt(e.target.value));
+                }}
+                className="h-6 w-12 text-center text-xs p-1"
+              />
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => addToCart(item?.id, qty)}
+                className="flex-1 h-6 bg-green-50 text-green-700 hover:bg-green-100 hover:text-green-800 border-green-300 text-xs px-2"
+                             >
+                {"Add"}
+              </Button>
             </div>
           </div>
         </CardContent>
@@ -201,10 +195,54 @@ export default function RestaurantPOS() {
   const table = getTableInfo();
   const printRef = useRef<HTMLDivElement>(null);
 
-  // Fixed useReactToPrint import and usage
-  const handlePrint = useReactToPrint({
-    contentRef: printRef,
-  });
+  // const handlePrint = () => {
+  //   if (printRef.current) {
+  //     const printWindow = window.open("", "_blank");
+  //     if (printWindow) {
+  //       printWindow.document.write(`
+  //         <html>
+  //           <head>
+  //             <title>Receipt - ${getItem?.data?.invoice}</title>
+  //             <style>
+  //               body { font-family: Arial, sans-serif; margin: 0; padding: 20px; }
+  //               .receipt { max-width: 300px; margin: 0 auto; }
+  //               @media print {
+  //                 body { margin: 0; padding: 0; }
+  //                 .receipt { max-width: none; }
+  //               }
+  //             </style>
+  //           </head>
+  //           <body>
+  //             <div class="receipt">
+  //               ${printRef.current.innerHTML}
+  //             </div>
+  //           </body>
+  //         </html>
+  //       `);
+  //       printWindow.document.close();
+  //       printWindow.print();
+  //       printWindow.close();
+  //     }
+  //   }
+  // };
+
+
+    // Fixed useReactToPrint import and usage
+    const handlePrint = useReactToPrint({
+      contentRef: printRef,
+    });
+
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto mb-4"></div>
+          <p>Loading menu...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col lg:flex-row h-screen bg-gray-50">
@@ -227,7 +265,7 @@ export default function RestaurantPOS() {
                 </h1>
                 {table && (
                   <p className="text-xs sm:text-sm text-green-600 font-medium truncate">
-                    Order for Table {table.name} ({table.category})
+                    Order for {table.name} ({table.category})
                   </p>
                 )}
               </div>
@@ -239,7 +277,7 @@ export default function RestaurantPOS() {
             >
               <ShoppingCart className="h-4 w-4" />
               <Badge variant="secondary" className="text-xs">
-                {getItem?.data?.saleItemResponse?.length || 0}
+                {getCartItemCount()}
               </Badge>
             </Button>
           </header>
@@ -265,12 +303,14 @@ export default function RestaurantPOS() {
               </ScrollArea>
             </div>
 
-            <div className="flex-1 overflow-auto p-3 sm:p-4">
+            <div className="flex-1 overflow-auto p-2 sm:p-3">
               {categories.map((category: any) => (
                 <TabsContent key={category} value={category} className="mt-0">
-                  {data
-                    ?.filter((item: any) => item.category === category)
-                    .map((item: any) => renderMenuItem(item))}
+                  <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 gap-2">
+                    {data
+                      ?.filter((item: any) => item.category === category)
+                      .map((item: any) => renderMenuItem(item))}
+                  </div>
                 </TabsContent>
               ))}
             </div>
@@ -304,7 +344,7 @@ export default function RestaurantPOS() {
                 </div>
                 {table && (
                   <p className="text-xs sm:text-sm text-green-600 truncate">
-                    Table {table.number} ({table.category})
+                    {table.name} ({table.category})
                   </p>
                 )}
               </div>
@@ -316,7 +356,7 @@ export default function RestaurantPOS() {
           </header>
 
           <ScrollArea className="flex-1 p-3 sm:p-4">
-            {getItem?.data?.saleItemResponse?.length === 0 ? (
+            {getCartItemCount() === 0 ? (
               <div className="flex h-32 items-center justify-center text-muted-foreground text-sm">
                 Your order is empty
               </div>
@@ -327,18 +367,13 @@ export default function RestaurantPOS() {
                     key={item.id}
                     className="flex items-center justify-between gap-2"
                   >
-                    <div
-                      className={`flex-1 min-w-0 ${
-                        item.quantity <= 0 ? "bg-red-600" : ""
-                      }`}
-                    >
+                    <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between gap-2">
                         <span className="font-medium text-sm sm:text-base truncate">
                           {item.name}
                         </span>
                         <div className="flex items-center gap-2 flex-shrink-0">
                           <span className="text-sm sm:text-base">
-                          
                             {formatCurrencyPrice(
                               item.priceAtSale * item.quantity,
                               "KHR"
@@ -349,6 +384,7 @@ export default function RestaurantPOS() {
                             variant="outline"
                             size="icon"
                             className="h-6 w-6 sm:h-7 sm:w-7 text-red-500 hover:text-red-700 hover:bg-red-50"
+                            disabled={removeItem.isPending}
                           >
                             <X className="h-3 w-3" />
                           </Button>
@@ -356,7 +392,8 @@ export default function RestaurantPOS() {
                       </div>
                       <div className="flex items-center gap-2 text-xs sm:text-sm text-muted-foreground">
                         <span>
-                          {formatCurrencyPrice(item.priceAtSale,'KHR')} × {item.quantity}
+                          {formatCurrencyPrice(item.priceAtSale, "KHR")} ×{" "}
+                          {item.quantity}
                         </span>
                       </div>
                     </div>
@@ -372,7 +409,7 @@ export default function RestaurantPOS() {
               <div className="flex justify-between font-bold text-sm sm:text-base">
                 <span>Total</span>
                 <span>
-                  {formatCurrencyPrice(getItem?.data?.totalAmount, "KHR")}
+                  {formatCurrencyPrice(getItem?.data?.totalAmount || 0, "KHR")}
                 </span>
               </div>
             </div>
@@ -391,7 +428,7 @@ export default function RestaurantPOS() {
                       : "hover:bg-green-50 hover:text-green-600"
                   }`}
                   onClick={() => setPaymentType("cash")}
-                  disabled={getItem?.data?.saleItemResponse?.length === 0}
+                  disabled={getCartItemCount() === 0}
                 >
                   <Banknote className="h-4 w-4 sm:h-5 sm:w-5" />
                   <span>Cash</span>
@@ -404,7 +441,7 @@ export default function RestaurantPOS() {
                       : "hover:bg-green-50 hover:text-green-600"
                   }`}
                   onClick={() => setPaymentType("credit")}
-                  disabled={getItem?.data?.saleItemResponse?.length === 0}
+                  disabled={getCartItemCount() === 0}
                 >
                   <CreditCard className="h-4 w-4 sm:h-5 sm:w-5" />
                   <span>Credit</span>
@@ -417,7 +454,7 @@ export default function RestaurantPOS() {
                       : "hover:bg-green-50 hover:text-green-600"
                   }`}
                   onClick={() => setPaymentType("digital")}
-                  disabled={getItem?.data?.saleItemResponse?.length === 0}
+                  disabled={getCartItemCount() === 0}
                 >
                   <Wallet className="h-4 w-4 sm:h-5 sm:w-5" />
                   <span>Digital</span>
@@ -427,9 +464,10 @@ export default function RestaurantPOS() {
 
             <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-2">
               <Button
-                className="bg-white text-green-600 border-green-600 hover:bg-green-50 text-sm sm:text-base"
+                variant="outline"
+                className="border-green-600 text-green-600 hover:bg-green-50 text-sm sm:text-base bg-transparent"
                 size="lg"
-                disabled={getItem?.data?.saleItemResponse?.length === 0}
+                disabled={getCartItemCount() === 0}
                 onClick={handlePrint}
               >
                 Print Receipt
@@ -438,7 +476,7 @@ export default function RestaurantPOS() {
                 className="bg-green-600 hover:bg-green-700 text-white text-sm sm:text-base"
                 size="lg"
                 disabled={
-                  getItem?.data?.saleItemResponse?.length === 0 || !paymentType
+                  getCartItemCount() === 0 || !paymentType || payment.isPending
                 }
                 onClick={() => {
                   payment.mutate({
@@ -447,17 +485,18 @@ export default function RestaurantPOS() {
                   });
                 }}
               >
-                Checkout
+                {payment.isPending ? "Processing..." : "Checkout"}
               </Button>
             </div>
+
             <div className="hidden">
               {getItem?.data?.saleItemResponse?.length > 0 && (
                 <InvoicePrint
                   ref={printRef}
                   invoice={getItem.data.saleItemResponse}
-                  totalAmount={getItem?.data?.totalAmount}
-                  invoiceNo={getItem?.data?.invoice}
-                  saleDate={getItem?.data?.saleDate}
+                  totalAmount={getItem?.data?.totalAmount || 0}
+                  invoiceNo={getItem?.data?.invoice || ""}
+                  saleDate={getItem?.data?.saleDate || new Date().toISOString()}
                   tableName={table?.name}
                 />
               )}
