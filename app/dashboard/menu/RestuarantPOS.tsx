@@ -156,7 +156,7 @@ export default function RestaurantPOS() {
             <h3 className="font-medium text-xs line-clamp-2 leading-tight">
               {item.name}
             </h3>
-            <p className="font-bold text-green-600 text-xs">
+            <p className="font-bold text-orange-500 text-xs">
               {formatCurrencyPrice(item.price, "KHR")}
             </p>
             <div className="flex items-center gap-1">
@@ -176,9 +176,9 @@ export default function RestaurantPOS() {
                 variant="outline"
                 size="sm"
                 onClick={() => addToCart(item?.id, qty)}
-                className="flex-1 h-6 bg-green-50 text-green-700 hover:bg-green-100 hover:text-green-800 border-green-300 text-xs px-2"
-                             >
-                {"Add"}
+                className="flex-1 h-6 bg-orange-500 text-orange-500-700 hover:bg-orange-100 hover:text-orage-800 border-orange-300 text-xs px-2"
+              >
+                {"កម្មង"}
               </Button>
             </div>
           </div>
@@ -226,12 +226,10 @@ export default function RestaurantPOS() {
   //   }
   // };
 
-
-    // Fixed useReactToPrint import and usage
-    const handlePrint = useReactToPrint({
-      contentRef: printRef,
-    });
-
+  // Fixed useReactToPrint import and usage
+  const handlePrint = useReactToPrint({
+    contentRef: printRef,
+  });
 
   if (isLoading) {
     return (
@@ -261,7 +259,7 @@ export default function RestaurantPOS() {
               </Button>
               <div className="min-w-0 flex-1">
                 <h1 className="text-lg sm:text-2xl font-bold truncate">
-                  Restaurant Menu
+                  មីនុយ
                 </h1>
                 {table && (
                   <p className="text-xs sm:text-sm text-green-600 font-medium truncate">
@@ -331,7 +329,7 @@ export default function RestaurantPOS() {
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
                   <h2 className="text-lg sm:text-xl font-bold">
-                    Current Order
+                    ការបញ្ជាទិញបច្ចុប្បន្ន
                   </h2>
                   <Button
                     variant="ghost"
@@ -358,7 +356,7 @@ export default function RestaurantPOS() {
           <ScrollArea className="flex-1 p-3 sm:p-4">
             {getCartItemCount() === 0 ? (
               <div className="flex h-32 items-center justify-center text-muted-foreground text-sm">
-                Your order is empty
+                មិនទាន់មានការកម្មង
               </div>
             ) : (
               <div className="space-y-3 sm:space-y-4">
@@ -407,7 +405,7 @@ export default function RestaurantPOS() {
             <div className="space-y-2">
               <Separator />
               <div className="flex justify-between font-bold text-sm sm:text-base">
-                <span>Total</span>
+                <span>សរុប</span>
                 <span>
                   {formatCurrencyPrice(getItem?.data?.totalAmount || 0, "KHR")}
                 </span>
@@ -417,7 +415,7 @@ export default function RestaurantPOS() {
             {/* Payment Type Selection */}
             <div className="mt-4">
               <p className="mb-2 font-medium text-sm sm:text-base">
-                Payment Method:
+                ទូទាត់តាមរយះ:
               </p>
               <div className="grid grid-cols-3 gap-1 sm:gap-2">
                 <Button
@@ -470,7 +468,7 @@ export default function RestaurantPOS() {
                 disabled={getCartItemCount() === 0}
                 onClick={handlePrint}
               >
-                Print Receipt
+                ព្រីន វិក្កយបត្រ
               </Button>
               <Button
                 className="bg-green-600 hover:bg-green-700 text-white text-sm sm:text-base"
@@ -485,7 +483,7 @@ export default function RestaurantPOS() {
                   });
                 }}
               >
-                {payment.isPending ? "Processing..." : "Checkout"}
+                {payment.isPending ? "Processing..." : "បង់ប្រាក់"}
               </Button>
             </div>
 
