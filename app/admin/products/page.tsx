@@ -30,7 +30,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { FolderPlus, Home, PlusCircle, Search, Upload, X } from "lucide-react";
+import { Clock, Edit, Eye, FolderPlus, Home, PlusCircle, Search, Trash2, Upload, X } from "lucide-react";
 import Link from "next/link";
 import useGetAllCategories from "@/hooks/get-all-categories";
 import useGetAllTableType from "@/hooks/get-all-table-type";
@@ -186,7 +186,7 @@ export default function SimplifiedMenu() {
   // Get price for the selected table type
   const getPriceForTableType = (item: MenuItem, tableType: string) => {
     const priceObj = item?.prices.find((p) => p?.tableType === tableType);
-    return priceObj ? priceObj.price : "0.00";
+    return priceObj ? priceObj.price : item.prices[0].price||"0.00";
   };
 
   const openImageDialog = (item: MenuItem) => {
@@ -336,7 +336,8 @@ export default function SimplifiedMenu() {
                         <SelectValue placeholder="Select category" />
                       </SelectTrigger>
                       <SelectContent>
-                        {categories?.filter((cat: any) => cat.id !== "all")
+                        {categories
+                          ?.filter((cat: any) => cat.id !== "all")
                           .map((category: any) => (
                             <SelectItem key={category.id} value={category.id}>
                               {category.name}
@@ -453,6 +454,115 @@ export default function SimplifiedMenu() {
                 <Table>
                   <TableHeader>
                     <TableRow>
+                      <TableHead>Item</TableHead>
+                      <TableHead>Category</TableHead>
+                      <TableHead>Price</TableHead>
+                      <TableHead>Prep Time</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredItems?.map((item:any) => {
+                      //const CategoryIcon = getCategoryIcon(item.category);
+                      return (
+                        <TableRow key={item.id}>
+                          <TableCell>
+                            <div className="flex items-center gap-3">
+                              <img
+                                src={item.image || "/placeholder.svg"}
+                                alt={item.name}
+                                className="h-12 w-12 rounded-md object-cover"
+                              />
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="text-green-600 hover:text-green-700 hover:bg-green-50"
+                                onClick={() => openImageDialog(item)}
+                              >
+                                <Upload className="h-4 w-4 mr-1" />
+                                Browse
+                              </Button>
+                              <div>
+                                <div className="font-medium">{item.name}</div>
+                                <div className="text-sm text-gray-500 line-clamp-1">
+                                  {item.description}
+                                </div>
+                              </div>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <Badge
+                              variant="outline"
+                              className="flex items-center gap-1 w-fit"
+                            >
+                              {item.category}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="font-medium">
+                            <Button
+                              variant="ghost"
+                              className="px-2 font-mono"
+                              onClick={() => openPriceDialog(item)}
+                            >
+                              {Number.parseFloat(
+                                getPriceForTableType(item, selectedTableType)
+                              ).toFixed(2)}
+                            </Button>
+                          </TableCell>
+                          {/* <TableCell>
+                            <div className="flex items-center gap-1">
+                              <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
+                              {item.rating}
+                            </div>
+                          </TableCell> */}
+                          <TableCell>
+                            <div className="flex items-center gap-1">
+                              <Clock className="h-3 w-3 text-gray-500" />
+                              {item.preparationTime}min
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-2">
+                              <Badge
+                                variant={
+                                  item.available ? "default" : "destructive"
+                                }
+                              >
+                                {item.available ? "Available" : "Unavailable"}
+                              </Badge>
+                              {item.popular && (
+                                <Badge className="bg-orange-500 text-white">
+                                  Popular
+                                </Badge>
+                              )}
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-2">
+                              <Button variant="ghost" size="icon">
+                                <Eye className="h-4 w-4" />
+                              </Button>
+                              <Button variant="ghost" size="icon">
+                                <Edit className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="text-red-600 hover:text-red-700"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+                {/* <Table>
+                  <TableHeader>
+                    <TableRow>
                       <TableHead>Image</TableHead>
                       <TableHead>Name</TableHead>
                       <TableHead>Category</TableHead>
@@ -537,7 +647,7 @@ export default function SimplifiedMenu() {
                       ))
                     )}
                   </TableBody>
-                </Table>
+                </Table> */}
               </div>
             </CardContent>
           </Card>
