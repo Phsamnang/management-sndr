@@ -134,6 +134,14 @@ export default function RestaurantPOS() {
     orderFood.mutate(data);
   };
 
+  const { data: printData, isLoading: printLaoding } = useQuery({
+    queryFn: () => SaleService.getPrintSale(saleId),
+    queryKey: ["printSale", saleId],
+    staleTime: 0, // data is stale immediately
+    gcTime: 0,
+    placeholderData: undefined, // force null/undefined while loading
+  });
+
   const getCartItemCount = () => {
     return getItem?.data?.saleItemResponse?.length || 0;
   };
@@ -466,7 +474,10 @@ export default function RestaurantPOS() {
                 className="border-green-600 text-green-600 hover:bg-green-50 text-sm sm:text-base bg-transparent"
                 size="lg"
                 disabled={getCartItemCount() === 0}
-                onClick={handlePrint}
+                onClick={() => {
+                  useClient.invalidateQueries({ queryKey: ["printSale"] });
+                  handlePrint();
+                }}
               >
                 ព្រីន វិក្កយបត្រ
               </Button>
@@ -488,16 +499,7 @@ export default function RestaurantPOS() {
             </div>
 
             <div className="hidden">
-              {getItem?.data?.saleItemResponse?.length > 0 && (
-                <InvoicePrint
-                  ref={printRef}
-                  invoice={getItem.data.saleItemResponse}
-                  totalAmount={getItem?.data?.totalAmount || 0}
-                  invoiceNo={getItem?.data?.invoice || ""}
-                  saleDate={getItem?.data?.saleDate || new Date().toISOString()}
-                  tableName={table?.name}
-                />
-              )}
+              {printData && <InvoicePrint ref={printRef} data={printData} />}
             </div>
           </div>
         </div>

@@ -1,32 +1,18 @@
 "use client";
 import { Card, CardContent } from "@/components/ui/card";
-import { formatDate } from "@/lib/utils";
+import { formatCurrencyPrice, formatDate } from "@/lib/utils";
 import { forwardRef } from "react";
 
 export const InvoicePrint = forwardRef<
   HTMLDivElement,
   {
-    invoice?: any;
-    totalAmount: any;
-    invoiceNo: any;
-    saleDate: any;
-    tableName: any;
+    data?: any;
   }
->(({ invoice, totalAmount, invoiceNo, saleDate, tableName }, ref) => {
-  const grouped = Object.values(
-    invoice.reduce((acc: any, item: any) => {
-      const key = `${item.name}_${item.priceAtSale}`;
-      if (!acc[key]) {
-        acc[key] = { ...item }; // copy original item
-      } else {
-        acc[key].quantity += item.quantity;
-      }
-      return acc;
-    }, {} as Record<string, (typeof invoice)[number]>)
-  ).filter((item: any) => item.quantity !== 0);
+>(({ data }, ref) => {
   const baseHeight = 4; // Base height in inches for header, footer, etc.
-  const itemHeight = 0.4; // Height per item in inches
-  const dynamicHeight = baseHeight + grouped.length * itemHeight;
+  const itemHeight = 0.6; // Increased height per item to accommodate images
+  const dynamicHeight = baseHeight + (data?.items?.length || 0) * itemHeight;
+
   return (
     <div
       style={{
@@ -36,9 +22,19 @@ export const InvoicePrint = forwardRef<
       <div className="max-w-2xl mx-auto p-4" ref={ref}>
         <Card className="print:shadow-none print:border-none">
           <CardContent className="p-3 print:p-2 text-xs">
-            {/* Header */}
+            {/* Header with Logo */}
             <div className="text-center mb-3">
-              <div className="font-bold text-sm">
+              {/* <div className="flex justify-center mb-2">
+                <img
+                  src="/placeholder.svg?height=48&width=48&text=Logo"
+                  alt="Restaurant Logo"
+                  className="w-12 h-12 object-contain"
+                />
+              </div> */}
+              <div
+                className="font-bold text-sm !font-khmer"
+                style={{ fontFamily: "'Khmer Moul', serif" }}
+              >
                 SN សាច់អាំង(រស់ជាតិដើម​ ត្បូងឃ្មុំ)
               </div>
               <div className="text-xs text-gray-600">
@@ -54,33 +50,60 @@ export const InvoicePrint = forwardRef<
             <div className="mb-2 space-y-1">
               <div className="flex justify-between">
                 <span>លេខវិក្ក័យបត្រ:</span>
-                <span className="font-mono">{invoiceNo}</span>
+                <span className="font-mono">{data?.inv_no}</span>
               </div>
               <div className="flex justify-between">
                 <span>តុ:</span>
-                <span>{tableName}</span>
+                <span>{data?.table_name}</span>
               </div>
               <div className="flex justify-between">
                 <span>កាលបរិច្ឆេទ:</span>
-                <span>{formatDate(saleDate)}</span>
+                <span>{formatDate(data?.sale_dt)}</span>
               </div>
             </div>
 
             <div className="border-t border-dashed border-gray-400 my-2"></div>
 
-            {/* Items */}
+            {/* Items with Images */}
             <div className="mb-2">
-              {grouped?.map((item: any) => (
-                <div key={item.id} className="mb-1">
-                  <div className="flex justify-between">
-                    <span className="truncate pr-2">{item.name}</span>
-                    <span className="font-mono">
-                      {item.quantity * item.priceAtSale}
-                    </span>
-                  </div>
-                  <div className="text-gray-600 text-xs">
-                    {" "}
-                    {item.quantity} x {item.priceAtSale}
+              {data?.items?.map((item: any, index: number) => (
+                <div
+                  key={item.name || index}
+                  className="mb-2 pb-1 border-b border-dotted border-gray-300 last:border-b-0"
+                >
+                  <div className="flex items-start gap-2">
+                    {/* Small Item Image */}
+                    <div className="flex-shrink-0">
+                      <img
+                        src={
+                          item.img ||
+                          `/placeholder.svg?height=32&width=32&text=${encodeURIComponent(
+                            item.name?.substring(0, 3) || "Item"
+                          )}`
+                        }
+                        alt={item.name}
+                        className="w-8 h-8 object-cover rounded border"
+                      />
+                    </div>
+
+                    {/* Item Details */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex justify-between items-start">
+                        <span className="truncate pr-2 font-medium">
+                          {item.name}
+                        </span>
+                        <span className="font-mono text-right">
+                          {formatCurrencyPrice(
+                            item.qty * item.sale_at_price,
+                            "KHR"
+                          )}
+                        </span>
+                      </div>
+                      <div className="text-gray-600 text-xs mt-1">
+                        {item.qty} x{" "}
+                        {formatCurrencyPrice(item.sale_at_price, "KHR")}
+                      </div>
+                    </div>
                   </div>
                 </div>
               ))}
@@ -92,45 +115,19 @@ export const InvoicePrint = forwardRef<
             <div className="space-y-1">
               <div className="flex justify-between">
                 <span>Subtotal:</span>
-                <span className="font-mono">{totalAmount}</span>
+                <span className="font-mono">
+                  {formatCurrencyPrice(data?.ttl_amt, "KHR")}
+                </span>
               </div>
-              {/* {invoice.discount > 0 && (
-                  <div className="flex justify-between text-green-600">
-                    <span>Discount:</span>
-                    <span className="font-mono"></span>
-                  </div>
-                )}
-                <div className="flex justify-between">
-                  <span>Tax:</span>
-                  <span className="font-mono"></span>
-                </div> */}
               <div className="border-t border-gray-400 pt-1">
                 <div className="flex justify-between font-bold text-sm">
                   <span>សរុបប្រាក់:</span>
-                  <span className="font-mono">{totalAmount}</span>
+                  <span className="font-mono">
+                    {formatCurrencyPrice(data?.ttl_amt, "KHR")}
+                  </span>
                 </div>
               </div>
             </div>
-
-            <div className="border-t border-dashed border-gray-400 my-2"></div>
-
-            {/* Payment */}
-            {/* <div className="space-y-1 mb-2">
-                <div className="flex justify-between">
-                  <span>Payment:</span>
-                  <span> </span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Paid:</span>
-                  <span className="font-mono"></span>
-                </div>
-                {invoice.change > 0 && (
-                  <div className="flex justify-between">
-                    <span>Change:</span>
-                    <span className="font-mono"></span>
-                  </div>
-                )}
-              </div> */}
 
             <div className="border-t border-dashed border-gray-400 my-2"></div>
 
@@ -180,12 +177,6 @@ export const InvoicePrint = forwardRef<
             }
 
             /* Prevent page breaks within items */
-            .mb-1 {
-              page-break-inside: avoid;
-              break-inside: avoid;
-            }
-
-            /* Keep invoice sections together */
             .mb-2 {
               page-break-inside: avoid;
               break-inside: avoid;
@@ -225,6 +216,28 @@ export const InvoicePrint = forwardRef<
             .border-t.border-dashed {
               page-break-inside: avoid;
               break-inside: avoid;
+            }
+
+            /* Logo and item images styling for print */
+            img {
+              max-width: 100% !important;
+              height: auto !important;
+              -webkit-print-color-adjust: exact;
+              color-adjust: exact;
+            }
+
+            /* Item image specific styling */
+            .w-8.h-8 {
+              width: 2rem !important;
+              height: 2rem !important;
+              flex-shrink: 0;
+            }
+
+            /* Ensure item layout stays intact */
+            .flex.items-start.gap-2 {
+              display: flex !important;
+              align-items: flex-start !important;
+              gap: 0.5rem !important;
             }
           }
         `}</style>

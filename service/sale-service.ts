@@ -54,6 +54,11 @@ const getSaleByDate=async(startDate:any,endDate:any)=>{
     return res.data?.data;
 }
 
+const getPrintSale=async (id:Number)=>{
+    const rs=await http.get(ServiveID.SALE+`/${id}/printers`);
+    return rs.data?.data;
+}
+
 export const SaleService={
     createSale,
     orderFood,
@@ -62,5 +67,6 @@ export const SaleService={
     removeItem,
     updateMenuPrice,
     salePayment,
-    getSaleByDate
+    getSaleByDate,
+    getPrintSale
 }
