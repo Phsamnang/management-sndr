@@ -14,12 +14,8 @@ export const InvoicePrint = forwardRef<
   const dynamicHeight = baseHeight + (data?.items?.length || 0) * itemHeight;
 
   return (
-    <div
-      style={{
-        display: "none",
-      }}
-    >
-      <div className="max-w-2xl mx-auto p-4" ref={ref}>
+    <div className="hidden print:block" ref={ref}>
+      <div className="max-w-2xl mx-auto p-4">
         <Card className="print:shadow-none print:border-none">
           <CardContent className="p-3 print:p-2 text-xs">
             {/* Header with Logo */}
@@ -32,7 +28,7 @@ export const InvoicePrint = forwardRef<
                 />
               </div> */}
               <div
-                className="font-bold text-sm !font-khmer"
+                className="font-bold text-sm"
                 style={{ fontFamily: "'Khmer Moul', serif" }}
               >
                 SN សាច់អាំង(រស់ជាតិដើម​ ត្បូងឃ្មុំ)
