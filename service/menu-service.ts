@@ -37,11 +37,17 @@ const updateImage = async (data:any) => {
   return rs.data?.data;
 };
 
+const updateOrderDefualt=async(data:any)=>{
+    const rs = await http.put(ServiceId.MENU + "/default-order",data);
+    return rs.data;
+}
+
 
 export const menuService = {
     createMenu,
     getAllMenus,
     getAllMenusWithprices,
     updatePrice,
-    updateImage
+    updateImage,
+    updateOrderDefualt
 }   

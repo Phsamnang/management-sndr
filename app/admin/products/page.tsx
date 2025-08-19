@@ -30,7 +30,18 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Clock, Edit, Eye, FolderPlus, Home, PlusCircle, Search, Trash2, Upload, X } from "lucide-react";
+import {
+  Clock,
+  Edit,
+  Eye,
+  FolderPlus,
+  Home,
+  PlusCircle,
+  Search,
+  Trash2,
+  Upload,
+  X,
+} from "lucide-react";
 import Link from "next/link";
 import useGetAllCategories from "@/hooks/get-all-categories";
 import useGetAllTableType from "@/hooks/get-all-table-type";
@@ -74,7 +85,7 @@ export default function SimplifiedMenu() {
   const [newItem, setNewItem] = useState({ name: "", categoryId: "" });
   const [isPriceDialogOpen, setIsPriceDialogOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
-  const [newPrice, setNewPrice] = useState('0');
+  const [newPrice, setNewPrice] = useState("0");
   const [newPriceTableType, setNewPriceTableType] = useState("1");
   const [isCategoryDialogOpen, setIsCategoryDialogOpen] = useState(false);
   const [newCategory, setNewCategory] = useState({ name: "" });
@@ -83,7 +94,7 @@ export default function SimplifiedMenu() {
     null
   );
   const [isCook, setIsCook] = useState(false);
-  const [defaultOrder,setDefualtOrder]=useState(1)
+  const [defaultOrder, setDefualtOrder] = useState(1);
   const useClient = useQueryClient();
   const { data } = useQuery({
     queryKey: ["menusPrice"],
@@ -123,8 +134,6 @@ export default function SimplifiedMenu() {
     },
   });
 
-  console.log(data,"product")
-
   // Filter menu items based on selected category and search query
   const filteredItems = data?.filter((item: any) => {
     const matchesCategory =
@@ -141,7 +150,7 @@ export default function SimplifiedMenu() {
       const newMenuItemWithPrices = {
         ...newItem,
         isCooked: isCook,
-        defaultOrder
+        defaultOrder,
       };
 
       createMenu.mutate(newMenuItemWithPrices);
@@ -188,7 +197,7 @@ export default function SimplifiedMenu() {
   // Get price for the selected table type
   const getPriceForTableType = (item: MenuItem, tableType: string) => {
     const priceObj = item?.prices.find((p) => p?.tableType === tableType);
-    return priceObj ? priceObj.price : item?.prices[0]?.price||"0.00";
+    return priceObj ? priceObj.price : item?.prices[0]?.price || "0.00";
   };
 
   const openImageDialog = (item: MenuItem) => {
@@ -220,6 +229,16 @@ export default function SimplifiedMenu() {
     }
   };
 
+  const [defualtOrderMap, setDefualtOrderMap] = useState<
+    Record<number, number>
+  >({});
+
+  const updateDefualtOrder = useMutation({
+    mutationFn: (data: any) => menuService.updateOrderDefualt(data),
+    onSuccess: () => {
+      useClient.invalidateQueries({ queryKey: ["menusPrice"] });
+    },
+  });
 
   if (categoryLoading || tableTypeLoading) return <MenusLoading />;
 
@@ -476,6 +495,8 @@ export default function SimplifiedMenu() {
                   </TableHeader>
                   <TableBody>
                     {filteredItems?.map((item: any) => {
+                      const defualtOrderNum =
+                        defualtOrderMap[item.id] || item.defaultOrder;
                       //const CategoryIcon = getCategoryIcon(item.category);
                       return (
                         <TableRow key={item.id}>
@@ -552,7 +573,22 @@ export default function SimplifiedMenu() {
                           </TableCell>
                           <TableCell>
                             <div className="flex items-center gap-1">
-                              {item.defaultOrder}
+                              <input
+                                type="text"
+                                defaultValue={defualtOrderNum}
+                                onBlur={(e) => {
+                                  const value = Number.parseInt(e.target.value);
+
+                                  setDefualtOrderMap((prev) => ({
+                                    ...prev,
+                                    [item.id]: value,
+                                  }));
+                                  updateDefualtOrder.mutate({
+                                    menuId: item.id,
+                                    defaultOrder: value,
+                                  });
+                                }}
+                              />
                             </div>
                           </TableCell>
                           <TableCell>
