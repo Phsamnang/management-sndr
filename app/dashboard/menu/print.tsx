@@ -73,9 +73,7 @@ export const InvoicePrint = forwardRef<
                       <img
                         src={
                           item.img ||
-                          `/placeholder.svg?height=32&width=32&text=${encodeURIComponent(
-                            item.name?.substring(0, 3) || "Item"
-                          )}`
+                          "https://ik.imagekit.io/4paezevxw/menus/meal_11881092.png"
                         }
                         alt={item.name}
                         className="w-8 h-8 object-cover rounded border"

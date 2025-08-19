@@ -24,6 +24,7 @@ import { SaleService } from "@/service/sale-service";
 import { InvoicePrint } from "./print";
 import { formatCurrencyPrice } from "@/lib/utils";
 import { useReactToPrint } from "react-to-print";
+import { set } from "react-hook-form";
 
 // Menu item type definition
 type MenuItem = {
@@ -32,6 +33,7 @@ type MenuItem = {
   price: number;
   category: string;
   img: string;
+  defaultOrder: number;
 };
 
 type CartItem = MenuItem & {
@@ -48,7 +50,7 @@ export default function RestaurantPOS() {
   const [tableId, setTableId] = useState<number | null>(null);
   const [activeCategory, setActiveCategory] = useState<string>("");
   const { tableInfo } = useGetAllTable();
-  const [qty, setQty] = useState(1);
+ const [qtyMap, setQtyMap] = useState<Record<number, number>>({});
   const [saleId, setSaleId] = useState(0);
   const [showMobileCart, setShowMobileCart] = useState(false);
 
@@ -81,7 +83,6 @@ export default function RestaurantPOS() {
     mutationFn: (data: any) => SaleService.orderFood(data),
     onSuccess: () => {
       useClient.invalidateQueries({ queryKey: ["saleItems"] });
-      setQty(1); // Reset quantity after adding
     },
   });
 
@@ -134,12 +135,13 @@ export default function RestaurantPOS() {
     orderFood.mutate(data);
   };
 
-  const { data: printData, isLoading: printLaoding } = useQuery({
+  const { data: printData, isLoading: printLaoding ,refetch,isSuccess:printSucces} = useQuery({
     queryFn: () => SaleService.getPrintSale(saleId),
     queryKey: ["printSale", saleId],
     staleTime: 0, // data is stale immediately
     gcTime: 0,
-    placeholderData: undefined, // force null/undefined while loading
+    placeholderData: undefined,
+   enabled:false,
   });
 
   const getCartItemCount = () => {
@@ -147,6 +149,7 @@ export default function RestaurantPOS() {
   };
 
   const renderMenuItem = (item: MenuItem) => {
+    const qty =qtyMap[item.id]||item.defaultOrder;
     return (
       <Card key={item.id} className="group hover:shadow-md transition-shadow">
         <CardContent className="p-2">
@@ -154,7 +157,7 @@ export default function RestaurantPOS() {
             <img
               src={
                 item?.img ||
-                "/placeholder.svg?height=120&width=120&query=food+item"
+                "https://ik.imagekit.io/4paezevxw/menus/meal_11881092.png"
               }
               alt={item?.name}
               className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-200"
@@ -171,12 +174,13 @@ export default function RestaurantPOS() {
               <Input
                 type="number"
                 min="1"
+                defaultValue={qty}
                 onChange={(e) => {
                   const value = Math.max(
                     1,
                     Number.parseInt(e.target.value) || 1
                   );
-                  setQty(Number.parseInt(e.target.value));
+                  setQtyMap((prev) => ({ ...prev, [item.id]: value }));
                 }}
                 className="h-6 w-12 text-center text-xs p-1"
               />
@@ -233,6 +237,12 @@ export default function RestaurantPOS() {
   //     }
   //   }
   // };
+
+  useEffect(()=>{
+   if(printSucces){
+    handlePrint();
+   }
+  },[printSucces,printData])
 
   // Fixed useReactToPrint import and usage
   const handlePrint = useReactToPrint({
@@ -475,8 +485,7 @@ export default function RestaurantPOS() {
                 size="lg"
                 disabled={getCartItemCount() === 0}
                 onClick={() => {
-                  useClient.invalidateQueries({ queryKey: ["printSale"] });
-                  handlePrint();
+                  refetch()
                 }}
               >
                 ព្រីន វិក្កយបត្រ
@@ -498,7 +507,7 @@ export default function RestaurantPOS() {
               </Button>
             </div>
 
-            <div className="hidden">
+            <div className="">
               {printData && <InvoicePrint ref={printRef} data={printData} />}
             </div>
           </div>

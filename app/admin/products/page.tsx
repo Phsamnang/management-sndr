@@ -83,6 +83,7 @@ export default function SimplifiedMenu() {
     null
   );
   const [isCook, setIsCook] = useState(false);
+  const [defaultOrder,setDefualtOrder]=useState(1)
   const useClient = useQueryClient();
   const { data } = useQuery({
     queryKey: ["menusPrice"],
@@ -140,6 +141,7 @@ export default function SimplifiedMenu() {
       const newMenuItemWithPrices = {
         ...newItem,
         isCooked: isCook,
+        defaultOrder
       };
 
       createMenu.mutate(newMenuItemWithPrices);
@@ -322,6 +324,15 @@ export default function SimplifiedMenu() {
                       onCheckedChange={() => setIsCook(!isCook)}
                     />
                     <Label htmlFor="available">IsCook</Label>
+                    <Label htmlFor="name">Defualt Order</Label>
+                    <Input
+                      id="name"
+                      onChange={(e) =>
+                        setDefualtOrder(Number.parseInt(e.target.value))
+                      }
+                      placeholder="Enter Defualt Order"
+                      required
+                    />
                   </div>
                   <div className="grid gap-2">
                     <Label htmlFor="category">Category</Label>
@@ -459,11 +470,12 @@ export default function SimplifiedMenu() {
                       <TableHead>Price</TableHead>
                       <TableHead>Prep Time</TableHead>
                       <TableHead>Status</TableHead>
+                      <TableHead>Defualt Order</TableHead>
                       <TableHead>Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {filteredItems?.map((item:any) => {
+                    {filteredItems?.map((item: any) => {
                       //const CategoryIcon = getCategoryIcon(item.category);
                       return (
                         <TableRow key={item.id}>
@@ -536,6 +548,11 @@ export default function SimplifiedMenu() {
                                   Popular
                                 </Badge>
                               )}
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-1">
+                              {item.defaultOrder}
                             </div>
                           </TableCell>
                           <TableCell>
