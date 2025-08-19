@@ -59,6 +59,12 @@ const getPrintSale=async (id:Number)=>{
     return rs.data?.data;
 }
 
+const finishOrder=async(id:number)=>{
+    const rs=await http.put(ServiveID.SALE+`/${id}/finish`);
+
+    return rs.data;
+}
+
 export const SaleService={
     createSale,
     orderFood,
@@ -68,5 +74,6 @@ export const SaleService={
     updateMenuPrice,
     salePayment,
     getSaleByDate,
-    getPrintSale
+    getPrintSale,
+    finishOrder
 }

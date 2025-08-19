@@ -4,23 +4,13 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
-  Grid,
   Users,
   Coffee,
   Utensils,
   UmbrellaIcon,
-  HouseIcon,
+  HomeIcon as HouseIcon,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
 import useGetAllTable from "@/hooks/get-all-table";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { SaleService } from "@/service/sale-service";
@@ -54,9 +44,14 @@ export default function TableSelection() {
 
   useEffect(() => {
     useClient.invalidateQueries({ queryKey: ["table"] });
-  }, [tableInfo]);
+  }, [selectedTable]);
 
-  if (isLoading) return <>Loading...</>;
+  if (isLoading)
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        Loading...
+      </div>
+    );
 
   // Get unique categories from table data
   const categories = Array.from(
@@ -72,9 +67,6 @@ export default function TableSelection() {
   };
 
   const handleProceed = () => {
-    // if (selectedTable) {
-    //   // Navigate to menu page with selected table
-    // }
     createSale.mutate(selectedTable as number);
   };
 
@@ -95,76 +87,97 @@ export default function TableSelection() {
 
   const getCategoryIcon = (category: string) => {
     switch (category.toLowerCase()) {
-      case "main dining":
-        return <Utensils className="h-5 w-5" />;
-      case "vip section":
-        return <Users className="h-5 w-5" />;
-      case "bar area":
-        return <Coffee className="h-5 w-5" />;
-      case "outdoor patio":
-        return <UmbrellaIcon className="h-5 w-5" />;
+      case "indoor":
+        return <Utensils className="h-3 w-3 sm:h-4 sm:w-4" />;
+      case "vip":
+        return <Users className="h-3 w-3 sm:h-4 sm:w-4" />;
+      case "bar":
+        return <Coffee className="h-3 w-3 sm:h-4 sm:w-4" />;
+      case "outdoor":
+        return <UmbrellaIcon className="h-3 w-3 sm:h-4 sm:w-4" />;
       default:
-        return <HouseIcon className="h-5 w-5" />;
+        return <HouseIcon className="h-3 w-3 sm:h-4 sm:w-4" />;
     }
   };
+
   return (
-    <div className="min-h-screen bg-gray-50 p-4">
-      <div className="mx-auto max-w-6xl">
-        <header className="mb-6 flex justify-between items-center">
-          <div>
-            <h1 className="text-3xl font-bold">Select a Table</h1>
-            <p className="text-muted-foreground">
-              Choose a table to place an order
-            </p>
+    <>
+      <div className="min-h-screen bg-gray-50 pb-24 sm:pb-20">
+        <div className="mx-auto max-w-6xl px-3 py-4 sm:p-4">
+          <header className="mb-4 sm:mb-6">
+            <div className="text-center sm:text-left">
+              <h1 className="text-xl sm:text-2xl md:text-3xl font-bold">
+                Select a Table
+              </h1>
+              <p className="text-sm sm:text-base text-muted-foreground mt-1">
+                Choose a table to place an order
+              </p>
+            </div>
+          </header>
+
+          <div className="space-y-4 sm:space-y-6">
+            {/* Render tables by category */}
+            {categories?.map((category: any) => (
+              <section key={category}>
+                <h2 className="mb-2 sm:mb-3 text-base sm:text-lg md:text-xl font-semibold flex items-center gap-2">
+                  {getCategoryIcon(category)}
+                  <span className="text-sm sm:text-base md:text-lg">
+                    {category}
+                  </span>
+                </h2>
+                <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8">
+                  {tableInfo
+                    .filter((table: any) => table.category === category)
+                    .map((table: any) => (
+                      <Card
+                        key={table.id}
+                        className={`border-2 transition-all cursor-pointer touch-manipulation ${
+                          selectedTable === table.id
+                            ? "ring-2 ring-green-500 ring-offset-1 sm:ring-offset-2"
+                            : ""
+                        } ${getTableStatusColor(table.status)}`}
+                        onClick={() => handleTableSelect(table.id)}
+                      >
+                        <CardContent className="p-2 sm:p-3 text-center">
+                          <div className="mb-1 text-sm sm:text-base md:text-lg font-bold">
+                            Table {table.name}
+                          </div>
+                          <div className="text-xs sm:text-sm">
+                            {table.seats} Seats
+                          </div>
+                          <div className="mt-1 text-xs capitalize">
+                            {table.status}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                </div>
+              </section>
+            ))}
           </div>
-        </header>
-        <div className="space-y-8">
-          {/* Render tables by category */}
-          {categories?.map((category: any) => (
-            <section key={category}>
-              <h2 className="mb-4 text-xl font-semibold flex items-center gap-2">
-                {getCategoryIcon(category)} {category}
-              </h2>
-              <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
-                {tableInfo
-                  .filter((table: any) => table.category === category)
-                  .map((table: any) => (
-                    <Card
-                      key={table.id}
-                      className={`border-2 transition-all ${
-                        selectedTable === table.id
-                          ? "ring-2 ring-green-500 ring-offset-2"
-                          : ""
-                      } ${getTableStatusColor(table.status)}`}
-                      onClick={() => handleTableSelect(table.id)}
-                    >
-                      <CardContent className="p-4 text-center">
-                        <div className="mb-1 text-2xl font-bold">
-                          Table {table.name}
-                        </div>
-                        <div className="text-sm">{table.seats} Seats</div>
-                        <div className="mt-2 text-xs capitalize">
-                          {table.status}
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-              </div>
-            </section>
-          ))}
         </div>
 
-        <div className="mt-8 flex justify-end">
-          <Button
-            size="lg"
-            className="bg-green-600 hover:bg-green-700 text-white px-8"
-            disabled={!selectedTable}
-            onClick={handleProceed}
-          >
-            Proceed to Menu
-          </Button>
+        {/* Fixed Bottom Button */}
+        <div className="fixed bottom-0 left-0 right-0 bg-white border-t shadow-lg p-3 sm:p-4 safe-area-inset-bottom">
+          <div className="mx-auto max-w-6xl">
+            <Button
+              size="lg"
+              className="w-full bg-green-600 hover:bg-green-700 text-white py-3 sm:py-4 text-base sm:text-lg font-semibold touch-manipulation min-h-[48px] sm:min-h-[56px]"
+              disabled={!selectedTable}
+              onClick={handleProceed}
+            >
+              {selectedTable ? (
+                <span className="truncate">
+                  Proceed to Menu - Table{" "}
+                  {tableInfo?.find((t: any) => t.id === selectedTable)?.name}
+                </span>
+              ) : (
+                "Select a Table to Continue"
+              )}
+            </Button>
+          </div>
         </div>
       </div>
-    </div>
+    </>
   );
 }
