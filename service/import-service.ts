@@ -16,7 +16,7 @@ const getImportByDate=async(date:string)=>{
         importDate: date,
       },
     });
-    return rs.data?.data;
+    return rs.data;
 }
 
 const updateImportPaymentStatus=async(data:any)=>{

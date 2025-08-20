@@ -82,6 +82,7 @@ export default function RestaurantPOS() {
     mutationFn: (data: any) => SaleService.orderFood(data),
     onSuccess: () => {
       useClient.invalidateQueries({ queryKey: ["saleItems"] });
+      useClient.invalidateQueries({ queryKey: ["menus"] });
     },
   });
 
@@ -89,6 +90,7 @@ export default function RestaurantPOS() {
     mutationFn: (id: number) => SaleService.removeItem(id),
     onSuccess: () => {
       useClient.invalidateQueries({ queryKey: ["saleItems"] });
+      useClient.invalidateQueries({ queryKey: ["menus"] });
     },
   });
 
@@ -304,7 +306,7 @@ export default function RestaurantPOS() {
                   <TabsContent key={category} value={category} className="mt-0">
                     <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 gap-2">
                       {data
-                        ?.filter((item: any) => item.category === category)
+                        ?.filter((item: any) => item?.category === category)
                         .map((item: any) => renderMenuItem(item))}
                     </div>
                   </TabsContent>

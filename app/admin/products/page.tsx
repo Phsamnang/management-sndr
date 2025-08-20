@@ -1,6 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import type React from "react";
+
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Table,
@@ -40,27 +42,17 @@ import {
   Search,
   Trash2,
   Upload,
-  X,
+  Settings,
 } from "lucide-react";
 import Link from "next/link";
 import useGetAllCategories from "@/hooks/get-all-categories";
 import useGetAllTableType from "@/hooks/get-all-table-type";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { menuService } from "@/service/menu-service";
-import { all } from "axios";
 import { categoryService } from "@/service/category-service";
 import { Switch } from "@/components/ui/switch";
 import MenusLoading from "./loading";
-
-// Category definitions
-// const categories = [
-//   { id: "all", name: "All Categories" },
-//   { id: "appetizers", name: "Appetizers" },
-//   { id: "mains", name: "Main Courses" },
-//   { id: "sides", name: "Sides" },
-//   { id: "desserts", name: "Desserts" },
-//   { id: "drinks", name: "Drinks" },
-// ];
+import { productService } from "@/service/product-service";
 
 type Price = {
   tableType: string;
@@ -72,6 +64,11 @@ type MenuItem = {
   name: string;
   category: string;
   prices: Price[];
+};
+
+type Category = {
+  id: string;
+  name: string;
 };
 
 export default function SimplifiedMenu() {
@@ -86,7 +83,7 @@ export default function SimplifiedMenu() {
   const [isPriceDialogOpen, setIsPriceDialogOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
   const [newPrice, setNewPrice] = useState("0");
-  const [newPriceTableType, setNewPriceTableType] = useState("1");
+  const [newPriceTableType, setNewPriceTableType] = useState("");
   const [isCategoryDialogOpen, setIsCategoryDialogOpen] = useState(false);
   const [newCategory, setNewCategory] = useState({ name: "" });
   const [isImageDialogOpen, setIsImageDialogOpen] = useState(false);
@@ -95,6 +92,19 @@ export default function SimplifiedMenu() {
   );
   const [isCook, setIsCook] = useState(false);
   const [defaultOrder, setDefualtOrder] = useState(1);
+  const [productId, setProductId] = useState("");
+
+  // New state for product edit dialog
+  const [isProductEditDialogOpen, setIsProductEditDialogOpen] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState<any>(null);
+  const [editQuantity, setEditQuantity] = useState(1);
+  const [editCategory, setEditCategory] = useState("");
+  const [editTableType, setEditTableType] = useState("");
+  const [editPrice, setEditPrice] = useState("");
+  const [useQty, setUseQty] = useState("");
+  const [editPreparationTime, setEditPreparationTime] = useState("");
+  const [editAvailable, setEditAvailable] = useState(true);
+
   const useClient = useQueryClient();
   const { data } = useQuery({
     queryKey: ["menusPrice"],
@@ -178,6 +188,18 @@ export default function SimplifiedMenu() {
     setIsPriceDialogOpen(true);
   };
 
+  // Open product edit dialog
+  const openProductEditDialog = (item: any) => {
+    setSelectedProduct(item);
+    setEditQuantity(item.defaultOrder || 1);
+    setEditCategory(item.categoryId || "");
+    setEditTableType(selectedTableType);
+    setEditPrice(getPriceForTableType(item, selectedTableType));
+    setEditPreparationTime(item.preparationTime || "");
+    setEditAvailable(item.available);
+    setIsProductEditDialogOpen(true);
+  };
+
   // Update price for an item
   const updatePrice = () => {
     if (selectedItem && newPrice && newPriceTableType) {
@@ -191,6 +213,19 @@ export default function SimplifiedMenu() {
       //setIsPriceDialogOpen(false);
     }
   };
+
+  const { data: productData } = useQuery({
+    queryKey: ["productData"],
+    queryFn: () => productService.getAllProduct(),
+  });
+
+  const updateStockUsingQty = useMutation({
+    mutationFn: (data: any) => menuService.updateStockUsingQty(data),
+    onSuccess: () => {
+      useClient.invalidateQueries({ queryKey: ["productData"] });
+      setIsProductEditDialogOpen(false);
+    },
+  });
 
   // Delete menu item
 
@@ -266,7 +301,7 @@ export default function SimplifiedMenu() {
               <DialogTrigger asChild>
                 <Button
                   variant="outline"
-                  className="text-green-600 border-green-600 hover:bg-green-50"
+                  className="text-green-600 border-green-600 hover:bg-green-50 bg-transparent"
                 >
                   <FolderPlus className="mr-2 h-4 w-4" />
                   Add Category
@@ -401,6 +436,34 @@ export default function SimplifiedMenu() {
 
       <div className="container mx-auto p-4">
         <div className="grid gap-6">
+          {/* Categories Management */}
+          {/* <Card>
+            <CardHeader>
+              <CardTitle>Categories</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-wrap gap-2">
+                {categories
+                  .filter((cat) => cat.id !== "all")
+                  .map((category) => (
+                    <div key={category.id} className="flex items-center gap-1">
+                      <Badge variant="outline" className={getCategoryColorClass(category.id)}>
+                        {category.name}
+                      </Badge>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-6 w-6 text-red-500 hover:text-red-700 hover:bg-red-50"
+                        onClick={() => deleteCategory(category.id)}
+                      >
+                        <X className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  ))}
+              </div>
+            </CardContent>
+          </Card> */}
+
           {/* Filters */}
           <Card>
             <CardHeader>
@@ -467,7 +530,7 @@ export default function SimplifiedMenu() {
           <Card>
             <CardHeader>
               <div className="flex items-center justify-between">
-                <CardTitle>Menu Items (Click on price to edit)</CardTitle>
+                <CardTitle>Menu Items (Click on item to edit)</CardTitle>
                 <Badge variant="outline" className="font-normal">
                   Showing prices for:{" "}
                   <span className="font-medium ml-1">
@@ -489,7 +552,7 @@ export default function SimplifiedMenu() {
                       <TableHead>Price</TableHead>
                       <TableHead>Prep Time</TableHead>
                       <TableHead>Status</TableHead>
-                      <TableHead>Defualt Order</TableHead>
+                      <TableHead>Default Order</TableHead>
                       <TableHead>Actions</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -499,7 +562,11 @@ export default function SimplifiedMenu() {
                         defualtOrderMap[item.id] || item.defaultOrder;
                       //const CategoryIcon = getCategoryIcon(item.category);
                       return (
-                        <TableRow key={item.id}>
+                        <TableRow
+                          key={item.id}
+                          className="cursor-pointer hover:bg-gray-50"
+                          onClick={() => openProductEditDialog(item)}
+                        >
                           <TableCell>
                             <div className="flex items-center gap-3">
                               <img
@@ -511,7 +578,10 @@ export default function SimplifiedMenu() {
                                 variant="ghost"
                                 size="sm"
                                 className="text-green-600 hover:text-green-700 hover:bg-green-50"
-                                onClick={() => openImageDialog(item)}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  openImageDialog(item);
+                                }}
                               >
                                 <Upload className="h-4 w-4 mr-1" />
                                 Browse
@@ -536,19 +606,16 @@ export default function SimplifiedMenu() {
                             <Button
                               variant="ghost"
                               className="px-2 font-mono"
-                              onClick={() => openPriceDialog(item)}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                openPriceDialog(item);
+                              }}
                             >
                               {Number.parseFloat(
                                 getPriceForTableType(item, selectedTableType)
                               ).toFixed(2)}
                             </Button>
                           </TableCell>
-                          {/* <TableCell>
-                            <div className="flex items-center gap-1">
-                              <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
-                              {item.rating}
-                            </div>
-                          </TableCell> */}
                           <TableCell>
                             <div className="flex items-center gap-1">
                               <Clock className="h-3 w-3 text-gray-500" />
@@ -576,6 +643,7 @@ export default function SimplifiedMenu() {
                               <input
                                 type="text"
                                 defaultValue={defualtOrderNum}
+                                onClick={(e) => e.stopPropagation()}
                                 onBlur={(e) => {
                                   const value = Number.parseInt(e.target.value);
 
@@ -593,6 +661,16 @@ export default function SimplifiedMenu() {
                           </TableCell>
                           <TableCell>
                             <div className="flex items-center gap-2">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  openProductEditDialog(item);
+                                }}
+                              >
+                                <Settings className="h-4 w-4" />
+                              </Button>
                               <Button variant="ghost" size="icon">
                                 <Eye className="h-4 w-4" />
                               </Button>
@@ -613,99 +691,79 @@ export default function SimplifiedMenu() {
                     })}
                   </TableBody>
                 </Table>
-                {/* <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Image</TableHead>
-                      <TableHead>Name</TableHead>
-                      <TableHead>Category</TableHead>
-                      <TableHead>Price</TableHead>
-                      <TableHead className="text-right">Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredItems?.length === 0 ? (
-                      <TableRow>
-                        <TableCell colSpan={4} className="h-24 text-center">
-                          No menu items found.
-                        </TableCell>
-                      </TableRow>
-                    ) : (
-                      filteredItems?.map((item: any) => (
-                        <TableRow key={item.id}>
-                          <TableCell>
-                            <div className="flex items-center gap-2">
-                              <div className="h-12 w-12 overflow-hidden rounded-md border">
-                                <img
-                                  src={item?.image || "/placeholder.svg"}
-                                  alt={item?.name}
-                                  className="h-full w-full object-cover"
-                                />
-                              </div>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="text-green-600 hover:text-green-700 hover:bg-green-50"
-                                onClick={() => openImageDialog(item)}
-                              >
-                                <Upload className="h-4 w-4 mr-1" />
-                                Browse
-                              </Button>
-                            </div>
-                          </TableCell>
-                          <TableCell className="font-medium">
-                            {item.name}
-                          </TableCell>
-                          <TableCell>
-                            <Badge
-                              variant="outline"
-                              className={
-                                item.category === "appetizers"
-                                  ? "bg-blue-100 text-blue-800 border-blue-200"
-                                  : item.category === "mains"
-                                  ? "bg-green-100 text-green-800 border-green-200"
-                                  : item.category === "sides"
-                                  ? "bg-purple-100 text-purple-800 border-purple-200"
-                                  : item.category === "desserts"
-                                  ? "bg-amber-100 text-amber-800 border-amber-200"
-                                  : "bg-rose-100 text-rose-800 border-rose-200"
-                              }
-                            >
-                              {categories.find(
-                                (c: any) => c.name === item.category
-                              )?.name || item.category}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>
-                            <Button
-                              variant="ghost"
-                              className="px-2 font-mono"
-                              onClick={() => openPriceDialog(item)}
-                            >
-                              {Number.parseFloat(
-                                getPriceForTableType(item, selectedTableType)
-                              ).toFixed(2)}
-                            </Button>
-                          </TableCell>
-                          <TableCell className="text-right">
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="text-red-500 hover:text-red-700 hover:bg-red-50"
-                            >
-                              <X className="h-4 w-4" />
-                            </Button>
-                          </TableCell>
-                        </TableRow>
-                      ))
-                    )}
-                  </TableBody>
-                </Table> */}
               </div>
             </CardContent>
           </Card>
         </div>
       </div>
+
+      {/* Product Edit Dialog */}
+      <Dialog
+        open={isProductEditDialogOpen}
+        onOpenChange={setIsProductEditDialogOpen}
+      >
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle>Edit Product: {selectedProduct?.name}</DialogTitle>
+            <DialogDescription>
+              Update product details, category, quantity, and pricing
+              information.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="grid gap-2">
+                <Label htmlFor="priceTableType">Product</Label>
+                <Select
+                  value={productId}
+                  onValueChange={setProductId}
+                >
+                  <SelectTrigger id="priceTableType">
+                    <SelectValue placeholder="Select table type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {productData?.map((type: any) => (
+                      <SelectItem key={type.id} value={type.id}>
+                        {type.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="qty">Using Qty</Label>
+                <Input
+                  id="qty"
+                  onChange={(e) => setUseQty(e.target.value)}
+                  placeholder="Enter quantity to use"
+                />
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setIsProductEditDialogOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              className="bg-green-600 hover:bg-green-700"
+              onClick={() => {
+                updateStockUsingQty.mutate({
+                  menuId: selectedProduct.id,
+                  productId: productId,
+                  qty: useQty,
+                });
+              }}
+            >
+              Save
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Price Edit Dialog */}
       <Dialog open={isPriceDialogOpen} onOpenChange={setIsPriceDialogOpen}>
@@ -736,7 +794,7 @@ export default function SimplifiedMenu() {
               </Select>
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="price">Price</Label>
+              <Label htmlFor=",price">Price</Label>
               <Input
                 id="price"
                 type="number"

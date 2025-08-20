@@ -108,10 +108,13 @@ export default function ImportProductsPage() {
     },
   });
 
+
   const getImport = useQuery({
     queryFn: () => importService.getImportByDate(dateFilter),
-    queryKey: ["getImport",dateFilter],
+    queryKey: ["getImport"],
   });
+
+  console.log(getImport)
 
   const { products } = useGetAllProducts();
 

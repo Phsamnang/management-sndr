@@ -43,11 +43,17 @@ const updateOrderDefualt=async(data:any)=>{
 }
 
 
+const updateStockUsingQty=async(data:any)=>{
+    const rs = await http.post(ServiceId.MENU + "/using-stock", data);
+    return rs.data;
+}
+
 export const menuService = {
     createMenu,
     getAllMenus,
     getAllMenusWithprices,
     updatePrice,
     updateImage,
-    updateOrderDefualt
+    updateOrderDefualt,
+    updateStockUsingQty
 }   
