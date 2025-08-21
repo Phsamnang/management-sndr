@@ -19,19 +19,9 @@ import { Button } from "@/components/ui/button";
 // Menu items.
 const items = [
   {
-    title: "Home",
+    title: "Order",
     url: "/dashboard",
-    icon: Home,
-  },
-  {
-    title: "Employee",
-    url: "/dashboard/employee",
-    icon: Inbox,
-  },
-  {
-    title: "Loan",
-    url: "/dashboard/loan",
-    icon: Calendar,
+    icon: Menu,
   },
   {
     title: "Chef",

@@ -14,6 +14,7 @@ import { useRouter } from "next/navigation";
 import useGetAllTable from "@/hooks/get-all-table";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { SaleService } from "@/service/sale-service";
+import TableSelectionLoading from "./loading";
 
 // Table type definition
 type TableStatus = "available" | "occupied" | "reserved" | "maintenance";
@@ -48,9 +49,7 @@ export default function TableSelection() {
 
   if (isLoading)
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        Loading...
-      </div>
+    <TableSelectionLoading/>
     );
 
   // Get unique categories from table data
