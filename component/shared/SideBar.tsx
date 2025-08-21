@@ -1,6 +1,6 @@
 "use client";
 
-import { Calendar, Home, Inbox, LogOut, LogOutIcon, Menu, Search } from "lucide-react";
+import { Calendar, ChefHat, Home, Inbox, LogOut, LogOutIcon, Menu, Search, Truck } from "lucide-react";
 
 import {
   Sidebar,
@@ -34,14 +34,14 @@ const items = [
     icon: Calendar,
   },
   {
-    title: "Table Management",
-    url: "/dashboard/table",
-    icon: Search,
+    title: "Chef",
+    url: "/dashboard/chef",
+    icon: ChefHat,
   },
   {
-    title: "Add Menu",
-    url: "/dashboard/add-menu",
-    icon: Menu,
+    title: "Delivery",
+    url: "/dashboard/delivery",
+    icon: Truck,
   },
   {
     title: "Sign Out",
