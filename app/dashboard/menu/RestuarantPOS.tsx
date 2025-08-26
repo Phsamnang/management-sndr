@@ -229,6 +229,9 @@ export default function RestaurantPOS() {
   // Fixed useReactToPrint import and usage
   const handlePrint = useReactToPrint({
     contentRef: printRef,
+    onAfterPrint() {
+      useClient.removeQueries({ queryKey: ["printSale", saleId] });
+    },
   });
 
   if (isLoading) {
