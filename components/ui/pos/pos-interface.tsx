@@ -147,6 +147,9 @@ export default function TableSelection() {
                           <div className="mt-1 text-xs capitalize">
                             {table.status}
                           </div>
+                          <div className="mt-1 text-xs capitalize">
+                            {table.ttle_amount}
+                          </div>
                         </CardContent>
                       </Card>
                     ))}
