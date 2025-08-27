@@ -12,6 +12,9 @@ import {
   ArrowLeft,
   X,
   CheckCircle,
+  Clock,
+  ChefHat,
+  Truck,
 } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
@@ -25,6 +28,7 @@ import { SaleService } from "@/service/sale-service";
 import { formatCurrencyPrice } from "@/lib/utils";
 import { useReactToPrint } from "react-to-print";
 import { InvoicePrint } from "./print";
+import { io } from "socket.io-client";
 
 
 // Menu item type definition
@@ -57,6 +61,22 @@ export default function RestaurantPOS() {
 
   const useClient = useQueryClient();
   const tableParam = searchParams.get("table");
+   const baseUrlAPI = process.env.NEXT_PUBLIC_POS_API;
+
+
+   useEffect(() => {
+    // Connect to backend WebSocket server
+    const socket = io(baseUrlAPI); // 🔁 Replace with your server URL
+    socket.on("connect", () => {
+      console.log("Connected to WebSocket server");
+    });
+    socket.on("tellCustomer", (data) => {
+      useClient.invalidateQueries({ queryKey: ["saleItems"] });   
+    });
+    return () => {
+      socket.disconnect();
+    };
+   }, []);
 
   useEffect(() => {
     // Get table number from URL
@@ -97,14 +117,14 @@ export default function RestaurantPOS() {
   const payment = useMutation({
     mutationFn: (data: any) => SaleService.salePayment(data),
     onSuccess: () => {
-    useClient.invalidateQueries({ queryKey: ["saleItems"] });
+      useClient.invalidateQueries({ queryKey: ["saleItems"] });
     },
   });
 
   const finishOrder = useMutation({
     mutationFn: (saleId: number) => SaleService.finishOrder(saleId),
     onSuccess: () => {
-      useClient.invalidateQueries({ queryKey: ["saleItems","table"] });
+      useClient.invalidateQueries({ queryKey: ["saleItems", "table"] });
       router.push("/");
     },
   });
@@ -115,7 +135,7 @@ export default function RestaurantPOS() {
 
   const getItem = useQuery({
     queryFn: () => SaleService.getSaleById(saleId),
-    queryKey: ["saleItems",saleId],
+    queryKey: ["saleItems", saleId],
   });
 
   // Get unique categories from menu items
@@ -159,6 +179,42 @@ export default function RestaurantPOS() {
 
   const getCartItemCount = () => {
     return getItem?.data?.saleItemResponse?.length || 0;
+  };
+
+  // Get status icon and color based on delivery status
+  const getStatusIcon = (deliveryStatus: string) => {
+    switch (deliveryStatus) {
+      case "pending":
+        return {
+          icon: <Clock className="h-3 w-3" />,
+          color: "text-yellow-600 bg-yellow-100",
+          label: "Pending",
+        };
+      case "processing":
+        return {
+          icon: <ChefHat className="h-3 w-3" />,
+          color: "text-blue-600 bg-blue-100",
+          label: "Preparing",
+        };
+      case "shipped":
+        return {
+          icon: <Truck className="h-3 w-3" />,
+          color: "text-purple-600 bg-purple-100",
+          label: "Ready",
+        };
+      case "delivered":
+        return {
+          icon: <CheckCircle className="h-3 w-3" />,
+          color: "text-green-600 bg-green-100",
+          label: "Complete",
+        };
+      default:
+        return {
+          icon: <Clock className="h-3 w-3" />,
+          color: "text-gray-600 bg-gray-100",
+          label: "Unknown",
+        };
+    }
   };
 
   const renderMenuItem = (item: MenuItem) => {
@@ -368,43 +424,55 @@ export default function RestaurantPOS() {
                 </div>
               ) : (
                 <div className="space-y-3 sm:space-y-4">
-                  {getItem?.data?.saleItemResponse?.map((item: any) => (
-                    <div
-                      key={item.id}
-                      className="flex items-center justify-between gap-2"
-                    >
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center justify-between gap-2">
-                          <span className="font-medium text-sm sm:text-base truncate">
-                            {item.name}
-                          </span>
-                          <div className="flex items-center gap-2 flex-shrink-0">
-                            <span className="text-sm sm:text-base">
-                              {formatCurrencyPrice(
-                                item.priceAtSale * item.quantity,
-                                "KHR"
-                              )}
+                  {getItem?.data?.saleItemResponse?.map((item: any) => {
+                    const statusInfo = getStatusIcon(item.delivery_sts);
+                    return (
+                      <div
+                        key={item.id}
+                        className="flex items-center justify-between gap-2"
+                      >
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="font-medium text-sm sm:text-base truncate">
+                              {item.name}
                             </span>
-                            <Button
-                              onClick={() => removeItem.mutate(item?.id)}
-                              variant="outline"
-                              size="icon"
-                              className="h-6 w-6 sm:h-7 sm:w-7 text-red-500 hover:text-red-700 hover:bg-red-50"
-                              disabled={removeItem.isPending}
+                            <div className="flex items-center gap-2 flex-shrink-0">
+                              <span className="text-sm sm:text-base">
+                                {formatCurrencyPrice(
+                                  item.priceAtSale * item.quantity,
+                                  "KHR"
+                                )}
+                              </span>
+                              <Button
+                                onClick={() => removeItem.mutate(item?.id)}
+                                variant="outline"
+                                size="icon"
+                                className="h-6 w-6 sm:h-7 sm:w-7 text-red-500 hover:text-red-700 hover:bg-red-50"
+                                disabled={removeItem.isPending}
+                              >
+                                <X className="h-3 w-3" />
+                              </Button>
+                            </div>
+                          </div>
+                          <div className="flex items-center justify-between gap-2 text-xs sm:text-sm text-muted-foreground">
+                            <span>
+                              {formatCurrencyPrice(item.priceAtSale, "KHR")} ×{" "}
+                              {item.quantity}
+                            </span>
+                            {/* Status Badge */}
+                            <div
+                              className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs ${statusInfo.color}`}
                             >
-                              <X className="h-3 w-3" />
-                            </Button>
+                              {statusInfo.icon}
+                              <span className="font-medium">
+                                {statusInfo.label}
+                              </span>
+                            </div>
                           </div>
                         </div>
-                        <div className="flex items-center gap-2 text-xs sm:text-sm text-muted-foreground">
-                          <span>
-                            {formatCurrencyPrice(item.priceAtSale, "KHR")} ×{" "}
-                            {item.quantity}
-                          </span>
-                        </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </ScrollArea>

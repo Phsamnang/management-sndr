@@ -25,9 +25,15 @@ const createTable = async (data: any) => {
   return rs.data?.data;
 };
 
+const updateTable = async (data: any,id:string) => {
+  const rs = await http.put(`${ServiceId.TABLE}/${id}`, data);
+  return rs.data?.data;
+};
+
 export const tableService = {
   getAllTables,
   getAllTableTypes,
   createTypeTable,
-  createTable
+  createTable,
+  updateTable,
 };

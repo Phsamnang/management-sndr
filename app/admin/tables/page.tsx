@@ -1,5 +1,4 @@
 "use client";
-"use client";
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -21,7 +20,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Textarea } from "@/components/ui/textarea";
 import { Plus, Users, MapPin, Edit, Trash2, Eye, Settings } from "lucide-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { tableService } from "@/service/table-service";
@@ -61,7 +59,7 @@ const sections = [
   },
 ];
 
-const statusColors:any = {
+const statusColors: any = {
   available: "bg-green-100 text-green-800",
   occupied: "bg-red-100 text-red-800",
   reserved: "bg-blue-100 text-blue-800",
@@ -78,68 +76,14 @@ export default function TablesPage() {
     { value: "counter", label: "Counter Seating", icon: "🥢" },
   ]);
 
-  const [tables, setTables] = useState<Table[]>([
-    {
-      id: "1",
-      name: "Window View Table",
-      number: "T001",
-      type: "standard",
-      capacity: 4,
-      section: "main",
-      status: "available",
-      description: "Near the window with city view",
-      createdAt: new Date("2024-01-15"),
-    },
-    {
-      id: "2",
-      name: "Family Booth",
-      number: "T002",
-      type: "booth",
-      capacity: 6,
-      section: "main",
-      status: "occupied",
-      description: "Comfortable booth seating",
-      createdAt: new Date("2024-01-15"),
-    },
-    {
-      id: "3",
-      name: "Sports Bar Table",
-      number: "B001",
-      type: "bar",
-      capacity: 2,
-      section: "bar",
-      status: "available",
-      description: "High bar table",
-      createdAt: new Date("2024-01-16"),
-    },
-    {
-      id: "4",
-      name: "Garden Patio",
-      number: "P001",
-      type: "outdoor",
-      capacity: 4,
-      section: "patio",
-      status: "reserved",
-      description: "Outdoor patio seating",
-      createdAt: new Date("2024-01-16"),
-    },
-    {
-      id: "5",
-      name: "Executive Suite",
-      number: "V001",
-      type: "private",
-      capacity: 8,
-      section: "vip",
-      status: "available",
-      description: "Private dining room",
-      createdAt: new Date("2024-01-17"),
-    },
-  ]);
+  const [tables, setTables] = useState(null);
   const useClient = useQueryClient();
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isAddTypeModalOpen, setIsAddTypeModalOpen] = useState(false);
-  const [editingTable, setEditingTable] = useState<Table | null>(null);
+  const [editingTable, setEditingTable] = useState<any>(null);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [newTable, setNewTable] = useState({
+    id: "",
     name: "",
     number: "",
     type: "",
@@ -173,24 +117,22 @@ export default function TablesPage() {
       name: table.name,
       typeId: table.type,
     });
-
-    setTables([...tables, table]);
-   
   };
 
   const createTable = useMutation({
     mutationFn: (data: any) => tableService.createTable(data),
     onSuccess: () => {
       useClient.invalidateQueries({ queryKey: ["allTables"] });
-       setNewTable({
-         name: "",
-         number: "",
-         type: "",
-         capacity: 2,
-         section: "",
-         status: "available",
-         description: "",
-       });
+      setNewTable({
+        id: "",
+        name: "",
+        number: "",
+        type: "",
+        capacity: 2,
+        section: "",
+        status: "available",
+        description: "",
+      });
       setIsAddModalOpen(false);
     },
   });
@@ -216,6 +158,7 @@ export default function TablesPage() {
       name: tableType.label,
     });
   };
+
   const handleUpdateTable = () => {
     if (
       !editingTable ||
@@ -226,25 +169,9 @@ export default function TablesPage() {
     )
       return;
 
-    setTables(
-      tables.map((table) =>
-        table.id === editingTable.id
-          ? {
-              ...table,
-              name: newTable.name,
-              number: newTable.number,
-              type: newTable.type,
-              capacity: newTable.capacity,
-              section: newTable.section,
-              status: newTable.status,
-              description: newTable.description,
-            }
-          : table
-      )
-    );
-
     setEditingTable(null);
     setNewTable({
+      id: "",
       name: "",
       number: "",
       type: "",
@@ -260,44 +187,16 @@ export default function TablesPage() {
     onSuccess: () => {
       setIsAddTypeModalOpen(false);
       useClient.invalidateQueries({ queryKey: ["allTableType"] });
+      setNewTableType({
+        value: "",
+        label: "",
+        icon: "🪑",
+      });
     },
   });
 
-  const handleDeleteTable = (id: string) => {
-    setTables(tables.filter((table) => table.id !== id));
-  };
-
-  const handleDeleteTableType = (value: string) => {
-    // Don't allow deletion if tables are using this type
-    const tablesUsingType = tables.filter((table) => table.type === value);
-    if (tablesUsingType.length > 0) {
-      alert(
-        `Cannot delete table type "${getTypeLabel(value)}" because ${
-          tablesUsingType.length
-        } table(s) are using it.`
-      );
-      return;
-    }
-    setTableTypes(tableTypes.filter((type) => type.value !== value));
-  };
-
   const getTypeLabel = (type: string) => {
     return tableTypes.find((t) => t.value === type)?.label || type;
-  };
-
-  const getTypeIcon = (type: string) => {
-    return tableTypes.find((t) => t.value === type)?.icon || "🪑";
-  };
-
-  const getSectionLabel = (section: string) => {
-    return sections.find((s) => s.value === section)?.label || section;
-  };
-
-  const getSectionColor = (section: string) => {
-    return (
-      sections.find((s) => s.value === section)?.color ||
-      "bg-gray-100 text-gray-800"
-    );
   };
 
   const availableTables = tableList?.data?.filter(
@@ -310,21 +209,42 @@ export default function TablesPage() {
     (t: any) => t.status === "reserved"
   ).length;
 
+  const updateTable = useMutation({
+    mutationFn: (data: any) => tableService.updateTable(data, newTable.id),
+    onSuccess: () => {
+      useClient.invalidateQueries({ queryKey: ["allTables"] });
+      setEditingTable(null);
+      setNewTable({
+        id: "",
+        name: "",
+        number: "",
+        type: "",
+        capacity: 2,
+        section: "",
+        status: "available",
+        description: "",
+      });
+      setIsEditModalOpen(false);
+    },
+    onError: (error) => {
+      console.log(error);
+    },
+  });
 
-  const commonIcons = [
-    "🪑",
-    "🛋️",
-    "🍺",
-    "🌳",
-    "🏛️",
-    "🥢",
-    "🍽️",
-    "☕",
-    "🥂",
-    "🎪",
-    "🏖️",
-    "🎭",
-  ];
+  const handleEditTable = (table: any) => {
+    setEditingTable(table);
+    setNewTable({
+      id: table.id,
+      name: table.name,
+      number: table.number,
+      type: table.type,
+      capacity: table.capacity || 2,
+      section: table.section || "",
+      status: table.status || "available",
+      description: table.description || "",
+    });
+    setIsEditModalOpen(true);
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
@@ -555,7 +475,7 @@ export default function TablesPage() {
         {/* Tables Grid */}
         <div>
           <h2 className="text-lg font-semibold text-gray-900 mb-4">
-            All Tables ({tables.length})
+            All Tables ({tableList?.data?.length})
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {tableList?.data?.map((table: any) => (
@@ -624,9 +544,7 @@ export default function TablesPage() {
                               </div>
                               <div>
                                 <Label>Section</Label>
-                                <p className="font-medium">
-                                  {getSectionLabel(table.section)}
-                                </p>
+                                <p className="font-medium"></p>
                               </div>
                               <div>
                                 <Label>Status</Label>
@@ -653,177 +571,18 @@ export default function TablesPage() {
                         </DialogContent>
                       </Dialog>
 
-                      <Dialog>
-                        <DialogTrigger asChild>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                          
-                          >
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                        </DialogTrigger>
-                        <DialogContent className="max-w-md">
-                          <DialogHeader>
-                            <DialogTitle>Edit Table - {table.name}</DialogTitle>
-                          </DialogHeader>
-                          <div className="space-y-4">
-                            <div>
-                              <Label htmlFor="edit-name">Table Name</Label>
-                              <Input
-                                id="edit-name"
-                                value={newTable.name}
-                                onChange={(e) =>
-                                  setNewTable({
-                                    ...newTable,
-                                    name: e.target.value,
-                                  })
-                                }
-                              />
-                            </div>
-
-                            <div>
-                              <Label htmlFor="edit-number">Table Number</Label>
-                              <Input
-                                id="edit-number"
-                                value={newTable.number}
-                                onChange={(e) =>
-                                  setNewTable({
-                                    ...newTable,
-                                    number: e.target.value,
-                                  })
-                                }
-                              />
-                            </div>
-
-                            <div>
-                              <Label htmlFor="edit-type">Table Type</Label>
-                              <Select
-                                value={newTable.type}
-                                onValueChange={(value) =>
-                                  setNewTable({ ...newTable, type: value })
-                                }
-                              >
-                                <SelectTrigger>
-                                  <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  {tableTypes.map((type) => (
-                                    <SelectItem
-                                      key={type.value}
-                                      value={type.value}
-                                    >
-                                      <div className="flex items-center space-x-2">
-                                        <span>{type.icon}</span>
-                                        <span>{type.label}</span>
-                                      </div>
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                            </div>
-
-                            <div>
-                              <Label htmlFor="edit-capacity">Capacity</Label>
-                              <Input
-                                id="edit-capacity"
-                                type="number"
-                                min="1"
-                                max="20"
-                                value={newTable.capacity}
-                                onChange={(e) =>
-                                  setNewTable({
-                                    ...newTable,
-                                    capacity:
-                                      Number.parseInt(e.target.value) || 2,
-                                  })
-                                }
-                              />
-                            </div>
-
-                            <div>
-                              <Label htmlFor="edit-section">Section</Label>
-                              <Select
-                                value={newTable.section}
-                                onValueChange={(value) =>
-                                  setNewTable({ ...newTable, section: value })
-                                }
-                              >
-                                <SelectTrigger>
-                                  <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  {sections.map((section) => (
-                                    <SelectItem
-                                      key={section.value}
-                                      value={section.value}
-                                    >
-                                      {section.label}
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                            </div>
-
-                            <div>
-                              <Label htmlFor="edit-status">Status</Label>
-                              <Select
-                                value={newTable.status}
-                                onValueChange={(value: any) =>
-                                  setNewTable({ ...newTable, status: value })
-                                }
-                              >
-                                <SelectTrigger>
-                                  <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="available">
-                                    Available
-                                  </SelectItem>
-                                  <SelectItem value="occupied">
-                                    Occupied
-                                  </SelectItem>
-                                  <SelectItem value="reserved">
-                                    Reserved
-                                  </SelectItem>
-                                  <SelectItem value="maintenance">
-                                    Maintenance
-                                  </SelectItem>
-                                </SelectContent>
-                              </Select>
-                            </div>
-
-                            <div>
-                              <Label htmlFor="edit-description">
-                                Description
-                              </Label>
-                              <Textarea
-                                id="edit-description"
-                                value={newTable.description}
-                                onChange={(e) =>
-                                  setNewTable({
-                                    ...newTable,
-                                    description: e.target.value,
-                                  })
-                                }
-                              />
-                            </div>
-
-                            <Button
-                              onClick={handleUpdateTable}
-                              className="w-full bg-blue-600 hover:bg-blue-700"
-                            >
-                              Update Table
-                            </Button>
-                          </div>
-                        </DialogContent>
-                      </Dialog>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleEditTable(table)}
+                      >
+                        <Edit className="h-4 w-4" />
+                      </Button>
 
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => handleDeleteTable(table.id)}
-                        className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                        className="text-red-600 hover:text-red-700 hover:bg-red-50 bg-transparent"
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
@@ -835,6 +594,66 @@ export default function TablesPage() {
           </div>
         </div>
       </div>
+
+      {/* Edit Table Dialog */}
+      <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Edit Table - {editingTable?.name}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="edit-name">Table Name</Label>
+              <Input
+                id="edit-name"
+                value={newTable.name}
+                onChange={(e) =>
+                  setNewTable({
+                    ...newTable,
+                    name: e.target.value,
+                  })
+                }
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="edit-type">Table Type</Label>
+              <Select
+                value={newTable.type}
+                onValueChange={(value) =>
+                  setNewTable({ ...newTable, type: value })
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select table type" />
+                </SelectTrigger>
+                <SelectContent>
+                  {typeList?.data?.map((type: any) => (
+                    <SelectItem key={type.id} value={type.id}>
+                      <div className="flex items-center space-x-2">
+                        <span>{type.name}</span>
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <Button
+              onClick={() =>
+                updateTable.mutate({
+                  name: newTable.name,
+                  typeId: newTable.type,
+                })
+              }
+              className="w-full bg-blue-600 hover:bg-blue-700"
+              disabled={updateTable.isPending}
+            >
+              {updateTable.isPending ? "Updating..." : "Update Table"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
