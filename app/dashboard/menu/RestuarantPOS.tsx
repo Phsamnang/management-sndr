@@ -30,7 +30,6 @@ import { useReactToPrint } from "react-to-print";
 import { InvoicePrint } from "./print";
 import { io } from "socket.io-client";
 
-
 // Menu item type definition
 type MenuItem = {
   id: number;
@@ -61,22 +60,21 @@ export default function RestaurantPOS() {
 
   const useClient = useQueryClient();
   const tableParam = searchParams.get("table");
-   const baseUrlAPI = process.env.NEXT_PUBLIC_POS_API;
+  const baseUrlAPI = process.env.NEXT_PUBLIC_POS_API;
 
-
-   useEffect(() => {
+  useEffect(() => {
     // Connect to backend WebSocket server
     const socket = io(baseUrlAPI); // 🔁 Replace with your server URL
     socket.on("connect", () => {
       console.log("Connected to WebSocket server");
     });
     socket.on("tellCustomer", (data) => {
-      useClient.invalidateQueries({ queryKey: ["saleItems"] });   
+      useClient.invalidateQueries({ queryKey: ["saleItems"] });
     });
     return () => {
       socket.disconnect();
     };
-   }, []);
+  }, []);
 
   useEffect(() => {
     // Get table number from URL
